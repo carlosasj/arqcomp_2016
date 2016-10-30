@@ -1,0 +1,23 @@
+@import "variables";
+@import "../../bower_components/materialize/sass/materialize";
+
+body {
+  background: color('grey', 'lighten-4');
+  //background: #001f30;
+}
+
+.nav-wrapper {
+  padding: 0 1rem;
+
+  .active {
+    background: rgba(255, 255, 255, .1);
+  }
+}
+
+.container {
+  max-width: 1000px;
+}
+
+.material-icons.equalize {
+  transform: translateY(15%);
+}

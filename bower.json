@@ -1,0 +1,24 @@
+{
+  "name": "arqcomp_2016",
+  "description": "REA de Arquitetura de Computadores, ICMC, 2016",
+  "main": "src/app.js",
+  "authors": [
+    "André Missaglia <andre.missaglia@gmail.com>",
+    "Carlos Schneider <carlosashchjr@gmail.com.br>",
+    "Jefferson Boldrin <jefferson.boldrin@gmail.com>"
+  ],
+  "license": "UNLICENSED",
+  "homepage": "https://github.com/carlosasj/arqcomp_2016",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "materialize": "^0.97.7",
+    "angular": "^1.5.8"
+  }
+}

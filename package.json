@@ -1,0 +1,28 @@
+{
+  "name": "arqcomp_2016",
+  "version": "0.0.1",
+  "description": "REA de Arquitetura de Computadores, ICMC, 2016",
+  "main": "src/app.js",
+  "authors": [
+    "André Missaglia <andre.missaglia@gmail.com>",
+    "Carlos Schneider <carlosashchjr@gmail.com.br>",
+    "Jefferson Boldrin <jefferson.boldrin@gmail.com>"
+  ],
+  "repository": "https://github.com/carlosasj/arqcomp_2016",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "bower": "^1.7.9",
+    "gulp": "^3.9.1",
+    "gulp-cli": "^1.2.2",
+    "gulp-concat": "^2.6.0",
+    "gulp-connect": "^5.0.0",
+    "gulp-contrib-copy": "^0.1.2",
+    "gulp-htmlmin": "^3.0.0",
+    "gulp-sass": "^2.3.2",
+    "gulp-strip-comments": "^2.4.3"
+  },
+  "scripts": {
+    "bower": "./node_modules/.bin/bower",
+    "gulp": "./node_modules/.bin/gulp"
+  }
+}
