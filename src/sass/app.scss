@@ -21,3 +21,18 @@ body {
 .material-icons.equalize {
   transform: translateY(15%);
 }
+
+.register-table {
+  td {
+    padding: 0;
+    text-align: center;
+    width: 50%;
+  }
+
+  input {
+    margin: 0;
+    text-align: center;
+    height: 1.25rem;
+    border: none;
+  }
+}

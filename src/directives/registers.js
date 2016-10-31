@@ -1,4 +1,4 @@
-angular.module('arqcompApp').directive('registersDirective', ['Registers', function(Registers) {
+angular.module('arqcompApp').directive('registersDirective', [function() {
 	return {
 		restrict: 'AE',
 		templateUrl: 'templates/registersDirective.html',

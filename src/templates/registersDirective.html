@@ -1,8 +1,7 @@
 <div class="card">
 	<div class="card-content">
 		<span class="card-title">Registradores</span>
-		<!--<p ng-repeat="value in keys(keys)">{{value}}</p>-->
-		<table class="striped">
+		<table class="striped register-table">
 			<thead>
 				<tr>
 					<td>Reg</td>
@@ -12,7 +11,7 @@
 			<tbody>
 				<tr ng-repeat="key in keys">
 					<td>{{key}}</td>
-					<td>{{registers[key]}}</td>
+					<td><input type="number" ng-model="registers[key]"></td>
 				</tr>
 			</tbody>
 		</table>
