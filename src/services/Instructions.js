@@ -23,6 +23,7 @@ angular.module('arqcompApp').factory('Instructions', [function () {
         get: pc => {
             pc /= 4;
             return code[pc];
-        }
+        },
+        predefinedCodes: predefinedCodes,
     }
 }]);

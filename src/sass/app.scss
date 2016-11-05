@@ -1,5 +1,6 @@
 @import "variables";
 @import "../../bower_components/materialize/sass/materialize";
+@import "../../bower_components/angular/angular-csp";
 
 body {
   background: color('grey', 'lighten-4');
@@ -22,17 +23,38 @@ body {
   transform: translateY(15%);
 }
 
-.register-table {
+table.thin-table {
   td {
     padding: 0;
+  }
+
+  input {
+    margin: 0;
+    height: 1.25rem;
+    border: none;
+  }
+}
+
+.register-table {
+  td {
     text-align: center;
     width: 50%;
   }
 
   input {
-    margin: 0;
     text-align: center;
-    height: 1.25rem;
-    border: none;
+  }
+}
+
+.code-table {
+  font-family: Monospaced, monospace;
+
+  td{
+    &:nth-of-type(1){
+      width: 10%;
+    }
+    &:nth-of-type(2){
+      width: 90%;
+    }
   }
 }
