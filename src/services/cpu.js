@@ -21,6 +21,13 @@ angular.module('arqcompApp').factory('CPU', [function () {
     };
 
     var all_functions = {
+        'ADDI': {func: addi, regex: /ADDI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)/, },
+        'ADD' : {func: add,  regex: /ADD (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])/, },
+        'SUBI': {func: subi, regex: /SUBI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)/, },
+        'SUB' : {func: sub,  regex: /SUB (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])/, },
+        'MULI': {func: muli, regex: /MULI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)/, },
+        'MUL' : {func: mul,  regex: /MUL (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])/, },
+        'CMP' : {func: cmp,  regex: /CMP (\$0|\$r[0-7]) (\$0|\$r[0-7])/, },
         'JMP' : {func: jmp,  regex: /JMP (\d+)/, },
         'JEQ' : {func: jeq,  regex: /JEQ (\d+)/, },
         'JNE' : {func: jne,  regex: /JNE (\d+)/, },
