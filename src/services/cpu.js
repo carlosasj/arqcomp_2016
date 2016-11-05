@@ -28,6 +28,7 @@ angular.module('arqcompApp').factory('CPU', [function () {
         'MULI': {regex: /MULI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)/, },
         'MUL' : {regex: /MUL (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])/, },
         'CMP' : {regex: /CMP (\$0|\$r[0-7]) (\$0|\$r[0-7])/, },
+        'MOV' : {regex: /MOV (\$r[0-7]) (\$0|\$r[0-7])/, },
         'JMP' : {regex: /JMP (\d+)/, },
         'JEQ' : {regex: /JEQ (\d+)/, },
         'JNE' : {regex: /JNE (\d+)/, },
@@ -42,8 +43,6 @@ angular.module('arqcompApp').factory('CPU', [function () {
     var fetch = () => {
         stages['F'].instruction_number = pc;
         // stages['F'].instruction_verbose = Instructions.get(pc);
-        stages['F'].is_bubble = false;
-        stages['F'].func = null;
 
         pc = pc + 4;
     };
@@ -51,15 +50,12 @@ angular.module('arqcompApp').factory('CPU', [function () {
     var decode = () => {
         stages['D'].instruction_number = stages['F'].instruction_number;
         stages['D'].instruction_verbose = stages['F'].instruction_verbose;
-        stages['D'].is_bubble = stages['F'].is_bubble;
-        stages['D'].func = parse(stages['D'].instruction_verbose).details.func;
+        stages['D'].func_name = parse(stages['D'].instruction_verbose).func_name;
     };
 
     var execute = () => {
         stages['E'].instruction_number = stages['D'].instruction_number;
         stages['E'].instruction_verbose = stages['D'].instruction_verbose;
-        stages['E'].is_bubble = stages['D'].is_bubble;
-        stages['E'].func = stages['D'].func;
 
         stages['E'].func()
     };
@@ -88,8 +84,6 @@ angular.module('arqcompApp').factory('CPU', [function () {
             stages[item] = {
                 instruction_number: null,
                 instruction_verbose: null,
-
-                is_bubble: false,
 
                 execute_up: none,
                 execute_down: none,
