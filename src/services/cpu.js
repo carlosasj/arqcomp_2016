@@ -1,24 +1,4 @@
-angular.module('arqcompApp').factory('CPU', [function () {
-
-    var jmp = instruction => {
-        var regex = all_functions[arguments.callee.name.toUpperCase()].regex;
-    };
-
-    var jeq = instruction => {
-        var regex = all_functions[arguments.callee.name.toUpperCase()].regex;
-    };
-
-    var jne = instruction => {
-        var regex = all_functions[arguments.callee.name.toUpperCase()].regex;
-    };
-
-    var jgt = instruction => {
-        var regex = all_functions[arguments.callee.name.toUpperCase()].regex;
-    };
-
-    var jlt = instruction => {
-        var regex = all_functions[arguments.callee.name.toUpperCase()].regex;
-    };
+angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', function (ULA, Registers) {
 
     var all_functions = {
         'ADDI': {regex: /ADDI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)/, },
@@ -34,6 +14,7 @@ angular.module('arqcompApp').factory('CPU', [function () {
         'JNE' : {regex: /JNE (\d+)/, },
         'JGT' : {regex: /JGT (\d+)/, },
         'JLT' : {regex: /JLT (\d+)/, },
+        'NOP' : {regex: /NOP/, },
     };
     var stages = {};
 
@@ -41,16 +22,81 @@ angular.module('arqcompApp').factory('CPU', [function () {
     var pc = 0;
 
     var fetch = () => {
-        stages['F'].instruction_number = pc;
-        // stages['F'].instruction_verbose = Instructions.get(pc);
+        stages['F'].instruction = {
+            number: pc,
+            verbose: Instructions.get(pc),
+            write_register:'',
+            operation:'NOP',
+        };
 
         pc = pc + 4;
     };
 
     var decode = () => {
-        stages['D'].instruction_number = stages['F'].instruction_number;
-        stages['D'].instruction_verbose = stages['F'].instruction_verbose;
-        stages['D'].func_name = parse(stages['D'].instruction_verbose).func_name;
+        var parsed = parse(stages['D'].instruction.verbose);
+        stages['D'].instruction.operation = parsed.func_name;
+        switch(parsed.func_name){
+            case 'ADDI':
+                stages['D'].instruction.write_register = parsed.details[1];
+                ULA.set_val1(Registers.get(parsed.details[2]));
+                ULA.set_val2(parsed.details[3]);
+                ULA.set_func('add');
+                break;
+            case 'ADD':
+                stages['D'].instruction.write_register = parsed.details[1];
+                ULA.set_val1(Registers.get(parsed.details[2]));
+                ULA.set_val2(Registers.get(parsed.details[3]));
+                ULA.set_func('add');
+                break;
+            case 'SUBI':
+                stages['D'].instruction.write_register = parsed.details[1];
+                ULA.set_val1(Registers.get(parsed.details[2]));
+                ULA.set_val2(parsed.details[3]);
+                ULA.set_func('sub');
+                break;
+            case 'SUB':
+                stages['D'].instruction.write_register = parsed.details[1];
+                ULA.set_val1(Registers.get(parsed.details[2]));
+                ULA.set_val2(Registers.get(parsed.details[3]));
+                ULA.set_func('sub');
+                break;
+            case 'MULI':
+                stages['D'].instruction.write_register = parsed.details[1];
+                ULA.set_val1(Registers.get(parsed.details[2]));
+                ULA.set_val2(parsed.details[3]);
+                ULA.set_func('mul');
+                break;
+            case 'MUL':
+                stages['D'].instruction.write_register = parsed.details[1];
+                ULA.set_val1(Registers.get(parsed.details[2]));
+                ULA.set_val2(Registers.get(parsed.details[3]));
+                ULA.set_func('mul');
+                break;
+            case 'CMP':
+                stages['D'].instruction.write_register = parsed.details[1];
+                ULA.set_val1(Registers.get(parsed.details[2]));
+                ULA.set_val2(Registers.get(parsed.details[3]));
+                ULA.set_func('cmp');
+                break;
+            case 'MOV':
+                stages['D'].instruction.write_register = parsed.details[1];
+                ULA.set_val1(Registers.get(parsed.details[2]));
+                ULA.set_func('mov');
+                break;
+            case 'JMP':
+                pc = parsed.details[1];
+                break;
+            case 'JEQ':
+                break;
+            case 'JNE':
+                break;
+            case 'JGT':
+                break;
+            case 'JLT':
+                break;
+            case 'NOP':
+                break;
+        }
     };
 
     var execute = () => {
@@ -59,14 +105,18 @@ angular.module('arqcompApp').factory('CPU', [function () {
 
         stages['E'].func()
     };
+    var writeback = () => {
+
+    };
 
     var parse = instruction => {
         for (var func_name in all_functions) {
             var f = all_functions[func_name];
-            if (instruction.match(f.regex)) {
+            var m = instruction.match(f.regex);
+            if (m) {
                 return {
                     func_name: func_name,
-                    details: f,
+                    details: m,
                 }
             }
         }
@@ -82,31 +132,31 @@ angular.module('arqcompApp').factory('CPU', [function () {
         var stg = ["F", "D", "E", "W"];
         for (var item in stg) {
             stages[item] = {
-                instruction_number: null,
-                instruction_verbose: null,
+                instruction: {
+                    instruction_number: null,
+                    instruction_verbose: null,
+                    write_register:'',
+                    operation:'NOP',
+                },
 
-                execute_up: none,
-                execute_down: none,
-
-                func: null,
+                execute: none,
             }
         }
 
-        stages['F'].execute_up = fetch;
-        stages['D'].execute_up = decode;
-        stages['E'].execute_up = execute;
+        stages['F'].execute = fetch;
+        stages['D'].execute = decode;
+        stages['E'].execute = execute;
+        stages['W'].execute = writeback;
     })();
 
     var clock = () => {
-        stages['W'].execute_up();
-        stages['E'].execute_up();
-        stages['D'].execute_up();
-        stages['F'].execute_up();
-
-        stages['W'].execute_down();
-        stages['E'].execute_down();
-        stages['D'].execute_down();
-        stages['F'].execute_down();
+        stages['W'].instruction = stages['E'].instruction;
+        stages['E'].instruction = stages['D'].instruction;
+        stages['D'].instruction = stages['F'].instruction;
+        stages['W'].execute();
+        stages['E'].execute();
+        stages['D'].execute();
+        stages['F'].execute();
     };
 
     return {
