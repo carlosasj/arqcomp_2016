@@ -71,11 +71,6 @@ angular.module('arqcompApp').factory('CPU', [function () {
         // stages['F'].instruction_verbose = Instructions.get(pc);
         stages['F'].is_bubble = false;
         stages['F'].func = null;
-        stages['F'].reg_dest_name = null;
-        stages['F'].reg_a_name = null;
-        stages['F'].reg_a_val = null;
-        stages['F'].reg_b_name = null;
-        stages['F'].reg_b_val = null;
 
         pc = pc + 4;
     };
