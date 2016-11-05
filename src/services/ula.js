@@ -35,7 +35,7 @@ angular.module('arqcompApp').factory('ULA', ['Registers', function (Registers) {
     };
 
     return {
-        output: output,
+        output: ()=>{return output},
         execute: execute,
         set_func: set_func,
         set_val1: set_val1,

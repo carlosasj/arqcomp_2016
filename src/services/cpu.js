@@ -1,26 +1,26 @@
 angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', function (ULA, Registers) {
 
     var all_functions = {
-        'ADDI': {regex: /ADDI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)/, },
-        'ADD' : {regex: /ADD (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])/, },
-        'SUBI': {regex: /SUBI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)/, },
-        'SUB' : {regex: /SUB (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])/, },
-        'MULI': {regex: /MULI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)/, },
-        'MUL' : {regex: /MUL (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])/, },
-        'CMP' : {regex: /CMP (\$0|\$r[0-7]) (\$0|\$r[0-7])/, },
-        'MOV' : {regex: /MOV (\$r[0-7]) (\$0|\$r[0-7])/, },
-        'JMP' : {regex: /JMP (\d+)/, },
-        'JEQ' : {regex: /JEQ (\d+)/, },
-        'JNE' : {regex: /JNE (\d+)/, },
-        'JGT' : {regex: /JGT (\d+)/, },
-        'JLT' : {regex: /JLT (\d+)/, },
-        'NOP' : {regex: /NOP/, },
+        'ADDI': {regex: /^ADDI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*%.*)?$/, },
+        'ADD' : {regex: /^ADD (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*%.*)?$/, },
+        'SUBI': {regex: /^SUBI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*%.*)?$/, },
+        'SUB' : {regex: /^SUB (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*%.*)?$/, },
+        'MULI': {regex: /^MULI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*%.*)?$/, },
+        'MUL' : {regex: /^MUL (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*%.*)?$/, },
+        'CMP' : {regex: /^CMP (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*%.*)?$/, },
+        'MOV' : {regex: /^MOV (\$r[0-7]) (\$0|\$r[0-7])([ \t]*%.*)?$/, },
+        'JMP' : {regex: /^JMP (\d+)([ \t]*%.*)?$/, },
+        'JE'  : {regex: /^JE (\d+)([ \t]*%.*)?$/, },
+        'JNE' : {regex: /^JNE (\d+)([ \t]*%.*)?$/, },
+        'JGT' : {regex: /^JGT (\d+)([ \t]*%.*)?$/, },
+        'JLT' : {regex: /^JLT (\d+)([ \t]*%.*)?$/, },
+        'NOP' : {regex: /^NOP([ \t]*%.*)?$/, },
+        'HLT' : {regex: /^HLT([ \t]*%.*)?$/, },
     };
     var stages = {};
 
     // program counter - próxima instrução a ser lida
     var pc = 0;
-
     var fetch = () => {
         stages['F'].instruction = {
             number: pc,
@@ -86,13 +86,25 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', function (ULA, 
             case 'JMP':
                 pc = parsed.details[1];
                 break;
-            case 'JEQ':
+            case 'JE':
+                if(ULA.output() == 0){
+                    pc = parsed.details[1];
+                }
                 break;
             case 'JNE':
+                if(ULA.output() != 0){
+                    pc = parsed.details[1];
+                }
                 break;
             case 'JGT':
+                if(ULA.output() > 0){
+                    pc = parsed.details[1];
+                }
                 break;
             case 'JLT':
+                if(ULA.output() < 0){
+                    pc = parsed.details[1];
+                }
                 break;
             case 'NOP':
                 break;
@@ -100,13 +112,10 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', function (ULA, 
     };
 
     var execute = () => {
-        stages['E'].instruction_number = stages['D'].instruction_number;
-        stages['E'].instruction_verbose = stages['D'].instruction_verbose;
-
-        stages['E'].func()
+        ULA.execute();
     };
     var writeback = () => {
-
+        Registers.set(stages['W'].instruction.write_register, ULA.output());
     };
 
     var parse = instruction => {
