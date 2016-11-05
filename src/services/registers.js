@@ -31,7 +31,6 @@ angular.module('arqcompApp').factory('Registers', [function () {
             "$r5": 0,
             "$r6": 0,
             "$r7": 0,
-            "$r8": 0,
             "$cmp": 0
         }
     };
