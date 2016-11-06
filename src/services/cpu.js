@@ -19,91 +19,111 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
     };
     var stages = {};
 
-    // program counter - próxima instrução a ser lida
-    var pc = 0;
+
     var fetch = () => {
+        // program counter - próxima instrução a ser lida
+        var pc = Registers.get('$pc'); 
         stages['F'].instruction = {
             number: pc,
             verbose: Instructions.get(pc),
             write_register:'',
             operation:'NOP',
+            details: null,
         };
+        var parsed = parse(stages['F'].instruction.verbose);
+        stages['F'].instruction.details = parsed.details;
+        stages['F'].instruction.operation = parsed.func_name;
+        switch(parsed.func_name){
+            case 'JMP':
+                Registers.set('$pc', parsed.details[1]);
+                break;
+            case 'JE':
+            case 'JNE':
+            case 'JGT':
+            case 'JLT':
+                //TODO branch prediction
+                Registers.set('$pc', pc + 4); // nunca desvia
+                // Se a previsão falhar, trocar instrução seguinte por bolha.
+                break;
+            case 'HLT':
+                break;
+            default:
+                Registers.set('$pc', pc + 4);
+                break;
 
-        pc = pc + 4;
+        }
     };
 
     var decode = () => {
-        var parsed = parse(stages['D'].instruction.verbose);
-        stages['D'].instruction.operation = parsed.func_name;
-        switch(parsed.func_name){
+        var details = stages['D'].instruction.details;
+        switch(stages['D'].instruction.operation){
             case 'ADDI':
-                stages['D'].instruction.write_register = parsed.details[1];
-                ULA.set_val1(Registers.get(parsed.details[2]));
-                ULA.set_val2(parsed.details[3]);
+                stages['D'].instruction.write_register = details[1];
+                ULA.set_val1(Registers.get(details[2]));
+                ULA.set_val2(details[3]);
                 ULA.set_func('add');
                 break;
             case 'ADD':
-                stages['D'].instruction.write_register = parsed.details[1];
-                ULA.set_val1(Registers.get(parsed.details[2]));
-                ULA.set_val2(Registers.get(parsed.details[3]));
+                stages['D'].instruction.write_register = details[1];
+                ULA.set_val1(Registers.get(details[2]));
+                ULA.set_val2(Registers.get(details[3]));
                 ULA.set_func('add');
                 break;
             case 'SUBI':
-                stages['D'].instruction.write_register = parsed.details[1];
-                ULA.set_val1(Registers.get(parsed.details[2]));
-                ULA.set_val2(parsed.details[3]);
+                stages['D'].instruction.write_register = details[1];
+                ULA.set_val1(Registers.get(details[2]));
+                ULA.set_val2(details[3]);
                 ULA.set_func('sub');
                 break;
             case 'SUB':
-                stages['D'].instruction.write_register = parsed.details[1];
-                ULA.set_val1(Registers.get(parsed.details[2]));
-                ULA.set_val2(Registers.get(parsed.details[3]));
+                stages['D'].instruction.write_register = details[1];
+                ULA.set_val1(Registers.get(details[2]));
+                ULA.set_val2(Registers.get(details[3]));
                 ULA.set_func('sub');
                 break;
             case 'MULI':
-                stages['D'].instruction.write_register = parsed.details[1];
-                ULA.set_val1(Registers.get(parsed.details[2]));
-                ULA.set_val2(parsed.details[3]);
+                stages['D'].instruction.write_register = details[1];
+                ULA.set_val1(Registers.get(details[2]));
+                ULA.set_val2(details[3]);
                 ULA.set_func('mul');
                 break;
             case 'MUL':
-                stages['D'].instruction.write_register = parsed.details[1];
-                ULA.set_val1(Registers.get(parsed.details[2]));
-                ULA.set_val2(Registers.get(parsed.details[3]));
+                stages['D'].instruction.write_register = details[1];
+                ULA.set_val1(Registers.get(details[2]));
+                ULA.set_val2(Registers.get(details[3]));
                 ULA.set_func('mul');
                 break;
             case 'CMP':
                 stages['D'].instruction.write_register = '$cmp';
-                ULA.set_val1(Registers.get(parsed.details[1]));
-                ULA.set_val2(Registers.get(parsed.details[2]));
+                ULA.set_val1(Registers.get(details[1]));
+                ULA.set_val2(Registers.get(details[2]));
                 ULA.set_func('cmp');
                 break;
             case 'MOV':
-                stages['D'].instruction.write_register = parsed.details[1];
-                ULA.set_val1(Registers.get(parsed.details[2]));
+                stages['D'].instruction.write_register = details[1];
+                ULA.set_val1(Registers.get(details[2]));
                 ULA.set_func('mov');
                 break;
             case 'JMP':
-                pc = parsed.details[1];
                 break;
             case 'JE':
                 if(ULA.output() == 0){
-                    pc = parsed.details[1];
+                    Registers.set('$pc', details[1]);
                 }
                 break;
             case 'JNE':
                 if(ULA.output() != 0){
-                    pc = parsed.details[1];
+                    Registers.set('$pc', details[1]);
                 }
                 break;
             case 'JGT':
                 if(ULA.output() > 0){
-                    pc = parsed.details[1];
+                    Registers.set('$pc', details[1]);
                 }
                 break;
             case 'JLT':
                 if(ULA.output() < 0){
-                    pc = parsed.details[1];
+                    Registers.set('$pc', details[1]);
                 }
                 break;
             case 'NOP':
