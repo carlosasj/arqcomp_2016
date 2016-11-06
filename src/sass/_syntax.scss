@@ -1,0 +1,23 @@
+.syntax-function {
+  color: $primary-color;
+  font-weight: bold;
+}
+
+.syntax-register {
+  color: color('green', 'darken-3');
+  font-style: italic;
+}
+
+.syntax-number {
+  color: color('red', 'darken-3');
+}
+
+.syntax-comment {
+  color: #888 !important;
+
+  .syntax-function,
+  .syntax-register,
+  .syntax-number {
+    color: #888 !important;
+  }
+}

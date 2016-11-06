@@ -19,6 +19,7 @@
   ],
   "dependencies": {
     "materialize": "^0.97.7",
-    "angular": "^1.5.8"
+    "angular": "^1.5.8",
+    "angular-sanitize": "^1.5.8"
   }
 }

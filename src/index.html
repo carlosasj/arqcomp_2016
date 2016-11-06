@@ -44,7 +44,7 @@
                                         <tbody>
                                             <tr ng-repeat="(idx, line) in form.selected_code.code">
                                                 <td>{{idx*4}}</td>
-                                                <td>{{line}}</td>
+                                                <td ng-bind-html="line | syntax"></td>
                                             </tr>
                                         </tbody>
                                     </table>
