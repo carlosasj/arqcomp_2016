@@ -1,4 +1,4 @@
-angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions', function (ULA, Registers, Instructions) {
+angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions', '$rootScope', function (ULA, Registers, Instructions, $rootScope) {
 
     var all_functions = {
         'ADDI': {regex: /^ADDI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
@@ -19,8 +19,21 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
     };
     var stages = {};
 
+    // impede que o PC seja incrementado na fase de fetch
+    var bubble = false;
+    var stall = stage => {
+        bubble = true;
+        stages[stage].instruction = {
+            number: null,
+            verbose: null,
+            write_register:'',
+            operation:'NOP',
+            details: null,
+        };
+    }
 
     var fetch = () => {
+        if(bubble) return;
         // program counter - próxima instrução a ser lida
         var pc = Registers.get('$pc');
         stages['F'].instruction = {
@@ -107,32 +120,54 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
             case 'JMP':
                 break;
             case 'JE':
-                if(ULA.output() == 0){
-                    Registers.set('$pc', parseInt(details[1]));
-                }
-                break;
             case 'JNE':
-                if(ULA.output() != 0){
-                    Registers.set('$pc', parseInt(details[1]));
-                }
-                break;
             case 'JGT':
-                if(ULA.output() > 0){
-                    Registers.set('$pc', parseInt(details[1]));
-                }
-                break;
             case 'JLT':
-                if(ULA.output() < 0){
-                    Registers.set('$pc', parseInt(details[1]));
-                }
-                break;
             case 'NOP':
+            default:
                 break;
         }
     };
 
     var execute = () => {
-        ULA.execute();
+        var details = stages['E'].instruction.details;
+        switch(stages['E'].instruction.operation){
+            case 'JE':
+                console.log(details[1]);
+                if(ULA.output() == 0){
+                    Registers.set('$pc', parseInt(details[1]));
+                    stall('F');
+                    stall('D');
+                }
+                break;
+            case 'JNE':
+                bubble = true;
+                if(ULA.output() != 0){
+                    Registers.set('$pc', parseInt(details[1]));
+                    stall('F');
+                    stall('D');
+                }
+                break;
+            case 'JGT':
+                bubble = true;
+                if(ULA.output() > 0){
+                    Registers.set('$pc', parseInt(details[1]));
+                    stall('F');
+                    stall('D');
+                }
+                break;
+            case 'JLT':
+                bubble = true;
+                if(ULA.output() < 0){
+                    Registers.set('$pc', parseInt(details[1]));
+                    stall('F');
+                    stall('D');
+                }
+                break;
+            default:
+                ULA.execute();
+                break;
+        }
     };
     var writeback = () => {
         Registers.set(stages['W'].instruction.write_register, ULA.output());
@@ -153,7 +188,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
 
     var none = () => {/* Faz absolutamente nada */};
 
-    (function init() {
+    var init = () => {
         // F - Fectch; Pega a próxima instrução
         // D - Decode; Decodifica a instrução
         // E - Execute; Executa a instrução
@@ -162,10 +197,11 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
         for (var item in stg) {
             stages[stg[item]] = {
                 instruction: {
-                    instruction_number: null,
-                    instruction_verbose: null,
-                    write_register:'',
-                    operation:'NOP',
+                    number: null,
+                    verbose: null,
+                    write_register: '',
+                    operation: 'NOP',
+                    details: null,
                 },
 
                 execute: none,
@@ -176,9 +212,12 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
         stages['D'].execute = decode;
         stages['E'].execute = execute;
         stages['W'].execute = writeback;
-    })();
+    };
+    init();
+    $rootScope.$on('reset', init)
 
     var clock = () => {
+        bubble = false;
         stages['W'].instruction = stages['E'].instruction;
         stages['E'].instruction = stages['D'].instruction;
         stages['D'].instruction = stages['F'].instruction;
@@ -186,6 +225,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
         stages['E'].execute();
         stages['D'].execute();
         stages['F'].execute();
+        Registers.endclock();
     };
 
     return {

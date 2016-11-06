@@ -1,7 +1,6 @@
-angular.module('arqcompApp').factory('Registers', [function () {
+angular.module('arqcompApp').factory('Registers', ['$rootScope', function ($rootScope) {
     var registers = null;
-
-    var set = (reg, value) => {
+    var _set = (reg, value) => {
         if (reg == '$0') return 0;
         else if (reg in registers) {
             registers[reg] = value;
@@ -10,39 +9,47 @@ angular.module('arqcompApp').factory('Registers', [function () {
             return null;
         }
     };
-
-    var set_cmp = value => {
-        registers['$cmp'] = value;
-        return value;
-    };
+    var _toset = {}
+    var set = (reg, value) => {
+        _toset[reg] = value;
+    }
+    var endclock = () => {
+        for(reg in _toset){
+            _set(reg, _toset[reg]);
+        }
+        _toset = {};
+    }
 
     var get = reg => {
         return (reg in registers)? registers[reg] : null;
     };
-
+    registers = {
+        "$0": 0,
+        "$r0": 0,
+        "$r1": 0,
+        "$r2": 0,
+        "$r3": 0,
+        "$r4": 0,
+        "$r5": 0,
+        "$r6": 0,
+        "$r7": 0,
+        "$cmp": 0,
+        "$pc": 0,
+    }
     var reset = () => {
-        registers = {
-            "$0": 0,
-            "$r0": 0,
-            "$r1": 0,
-            "$r2": 0,
-            "$r3": 0,
-            "$r4": 0,
-            "$r5": 0,
-            "$r6": 0,
-            "$r7": 0,
-            "$cmp": 0,
-            "$pc": 0,
+        for(key in registers){
+            registers[key] = 0;
         }
     };
 
     reset();
+    $rootScope.$on('reset', reset)
 
     return {
         registers: registers,
         set: set,
-        set_cmp: set_cmp,
         get: get,
-        reset: reset
+        reset: reset,
+        endclock:endclock,
     }
 }]);
