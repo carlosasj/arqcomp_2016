@@ -55,6 +55,7 @@ gulp.task('copy', ['copy:img', 'copy:fonts', 'copy:html'], function() {});
 gulp.task('js', function() {
     return gulp.src([
         'bower_components/angular/angular.js',
+        'bower_components/angular-sanitize/angular-sanitize.js',
         'bower_components/jquery/dist/jquery.min.js',
         'bower_components/materialize/dist/js/materialize.js',
         './src/**/*.js'

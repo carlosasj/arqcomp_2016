@@ -1,1 +1,1 @@
-angular.module('arqcompApp', []);
+angular.module('arqcompApp', ['ngSanitize']);

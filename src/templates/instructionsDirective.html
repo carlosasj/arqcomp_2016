@@ -5,7 +5,7 @@
 			<tbody>
 				<tr ng-repeat="(idx, line) in selected_code.code" ng-class="{'active-pc': idx*4 == registers['$pc']}">
 					<td>{{idx*4}}</td>
-					<td>{{line}}</td>
+					<td ng-bind-html="line | syntax"></td>
 				</tr>
 			</tbody>
 		</table>
