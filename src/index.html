@@ -29,13 +29,15 @@
                                 </div>
                             </div>
                             <div class="col s12">
-                                <label>Selecione o código</label>
-                                <select class="browser-default" ng-options="i+1 for i in [0] track by i" ng-model="form.selected_code"></select>
+                                <label>Selecione o código {{instructions_db[0].title}}</label>
+                                <select class="browser-default" ng-model="form.selected_code">
+                                    <option ng-repeat="code in instructions_db" value="{{$index}}">{{code.title}}</option>
+                                </select>
                             </div>
                             <div class="col s12">
                                 <table class="striped thin-table code-table">
                                     <tbody>
-                                        <tr ng-repeat="(idx, line) in instructions_db[form.selected_code]">
+                                        <tr ng-repeat="(idx, line) in instructions_db[form.selected_code].code">
                                             <td>{{idx*4}}</td>
                                             <td>{{line}}</td>
                                         </tr>
