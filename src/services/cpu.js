@@ -1,4 +1,4 @@
-angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', function (ULA, Registers) {
+angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions', function (ULA, Registers, Instructions) {
 
     var all_functions = {
         'ADDI': {regex: /^ADDI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*%.*)?$/, },
@@ -73,9 +73,9 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', function (ULA, 
                 ULA.set_func('mul');
                 break;
             case 'CMP':
-                stages['D'].instruction.write_register = parsed.details[1];
-                ULA.set_val1(Registers.get(parsed.details[2]));
-                ULA.set_val2(Registers.get(parsed.details[3]));
+                stages['D'].instruction.write_register = '$cmp';
+                ULA.set_val1(Registers.get(parsed.details[1]));
+                ULA.set_val2(Registers.get(parsed.details[2]));
                 ULA.set_func('cmp');
                 break;
             case 'MOV':

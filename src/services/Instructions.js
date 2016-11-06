@@ -1,4 +1,4 @@
-angular.module('arqcompApp').factory('Instruction', [function () {
+angular.module('arqcompApp').factory('Instructions', [function () {
     var predefinedCodes = [
         [
             'ADDI $r2 $0 1',//f[i-1]

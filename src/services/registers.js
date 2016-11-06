@@ -2,7 +2,7 @@ angular.module('arqcompApp').factory('Registers', [function () {
     var registers = null;
 
     var set = (reg, value) => {
-        if (reg == '$0' || reg == '$cmp') return 0;
+        if (reg == '$0') return 0;
         else if (reg in registers) {
             registers[reg] = value;
             return registers[reg];
