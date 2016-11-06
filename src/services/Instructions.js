@@ -8,13 +8,13 @@ angular.module('arqcompApp').factory('Instructions', [function () {
                 'ADDI $r4 $0 2',//i
                 'NOP',//RAW
                 'CMP $r4 $r1',
-                'JE 40',
+                'JE 44',
                 'ADD $r5 $r2 $r3',//f[i+1] = f[i] + f[i-1]
                 'MOV $r2 $r3',
                 'MOV $r3 $r5',
                 'ADDI $r4 $r4 1',
                 'JMP 12',
-                'HALT'
+                'HLT'
             ]
         },
     ];

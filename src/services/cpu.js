@@ -1,21 +1,21 @@
 angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions', function (ULA, Registers, Instructions) {
 
     var all_functions = {
-        'ADDI': {regex: /^ADDI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*%.*)?$/, },
-        'ADD' : {regex: /^ADD (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*%.*)?$/, },
-        'SUBI': {regex: /^SUBI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*%.*)?$/, },
-        'SUB' : {regex: /^SUB (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*%.*)?$/, },
-        'MULI': {regex: /^MULI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*%.*)?$/, },
-        'MUL' : {regex: /^MUL (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*%.*)?$/, },
-        'CMP' : {regex: /^CMP (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*%.*)?$/, },
-        'MOV' : {regex: /^MOV (\$r[0-7]) (\$0|\$r[0-7])([ \t]*%.*)?$/, },
-        'JMP' : {regex: /^JMP (\d+)([ \t]*%.*)?$/, },
-        'JE'  : {regex: /^JE (\d+)([ \t]*%.*)?$/, },
-        'JNE' : {regex: /^JNE (\d+)([ \t]*%.*)?$/, },
-        'JGT' : {regex: /^JGT (\d+)([ \t]*%.*)?$/, },
-        'JLT' : {regex: /^JLT (\d+)([ \t]*%.*)?$/, },
-        'NOP' : {regex: /^NOP([ \t]*%.*)?$/, },
-        'HLT' : {regex: /^HLT([ \t]*%.*)?$/, },
+        'ADDI': {regex: /^ADDI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
+        'ADD' : {regex: /^ADD (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'SUBI': {regex: /^SUBI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
+        'SUB' : {regex: /^SUB (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'MULI': {regex: /^MULI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
+        'MUL' : {regex: /^MUL (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'CMP' : {regex: /^CMP (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'MOV' : {regex: /^MOV (\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'JMP' : {regex: /^JMP (\d+)([ \t]*#.*)?$/, },
+        'JE'  : {regex: /^JE (\d+)([ \t]*#.*)?$/, },
+        'JNE' : {regex: /^JNE (\d+)([ \t]*#.*)?$/, },
+        'JGT' : {regex: /^JGT (\d+)([ \t]*#.*)?$/, },
+        'JLT' : {regex: /^JLT (\d+)([ \t]*#.*)?$/, },
+        'NOP' : {regex: /^NOP([ \t]*#.*)?$/, },
+        'HLT' : {regex: /^HLT([ \t]*#.*)?$/, },
     };
     var stages = {};
 
@@ -108,22 +108,22 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
                 break;
             case 'JE':
                 if(ULA.output() == 0){
-                    Registers.set('$pc', details[1]);
+                    Registers.set('$pc', parseInt(details[1]));
                 }
                 break;
             case 'JNE':
                 if(ULA.output() != 0){
-                    Registers.set('$pc', details[1]);
+                    Registers.set('$pc', parseInt(details[1]));
                 }
                 break;
             case 'JGT':
                 if(ULA.output() > 0){
-                    Registers.set('$pc', details[1]);
+                    Registers.set('$pc', parseInt(details[1]));
                 }
                 break;
             case 'JLT':
                 if(ULA.output() < 0){
-                    Registers.set('$pc', details[1]);
+                    Registers.set('$pc', parseInt(details[1]));
                 }
                 break;
             case 'NOP':
@@ -160,7 +160,6 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
         // W - Write; Escreve o resultado no registrador de destino
         var stg = ["F", "D", "E", "W"];
         for (var item in stg) {
-            console.log(stg[item]);
             stages[stg[item]] = {
                 instruction: {
                     instruction_number: null,
