@@ -1,18 +1,30 @@
 <div>
 	<div class="card">
 		<div class="card-content center">
-			<button class="btn btn-large" data-position="bottom" data-delay="10" data-tooltip="Play" ng-show="state == 'paused'" ng-click="click_play()">
-				<i class="material-icons">play_arrow</i>
-			</button>
-			<button class="btn btn-large" data-position="bottom" data-delay="10" data-tooltip="Pause" ng-show="state == 'playing'" ng-click="click_pause()">
-				<i class="material-icons">pause</i>
-			</button>
-			<button class="btn btn-large" data-position="bottom" data-delay="10" data-tooltip="Próximo clock" ng-click="click_step()">
-				<i class="material-icons">skip_next</i>
-			</button>
-			<button class="btn btn-large" data-position="bottom" data-delay="10" data-tooltip="Executar até o final" ng-click="click_ff()">
-				<i class="material-icons">fast_forward</i>
-			</button>
+			<div class="row">
+				<div class="s12 col">
+					<button class="btn btn-large" data-position="bottom" data-delay="10" data-tooltip="Play" ng-show="state == 'paused'" ng-click="click_play()">
+						<i class="material-icons">play_arrow</i>
+					</button>
+					<button class="btn btn-large" data-position="bottom" data-delay="10" data-tooltip="Pause" ng-show="state == 'playing'" ng-click="click_pause()">
+						<i class="material-icons">pause</i>
+					</button>
+					<button class="btn btn-large" data-position="bottom" data-delay="10" data-tooltip="Próximo clock" ng-click="click_step()">
+						<i class="material-icons">skip_next</i>
+					</button>
+					<button class="btn btn-large" data-position="bottom" data-delay="10" data-tooltip="Executar até o final" ng-click="click_ff()">
+						<i class="material-icons">fast_forward</i>
+					</button>
+				</div>
+			</div>
+			<div class="row">
+				<div class="s12 col">
+					<p class="range-field">
+						Delay ({{delay}} ms):
+						<input type="range" min="0" step="25" max="2000" ng-model="delay"  />
+					</p>
+				</div>
+			</div>
 		</div>
 	</div>
 </div>

@@ -7,15 +7,20 @@ angular.module('arqcompApp').directive('playerDirective', [function() {
 	};
 }]);
 
-angular.module('arqcompApp').controller('PlayerDirectiveController', ['$scope', 'CPU', function ($scope, CPU) {
+angular.module('arqcompApp').controller('PlayerDirectiveController', ['$scope', '$interval', '$timeout', 'CPU', function ($scope, $interval, $timeout, CPU) {
+	var interval_func = null;
 	$scope.state = 'paused';
+	$scope.delay = 500;
 
 	$scope.click_play = () => {
 		$scope.state = 'playing';
+
+		interval_func = $interval(CPU.clock, $scope.delay);
 	};
 
 	$scope.click_pause = () => {
 		$scope.state = 'paused';
+		$interval.cancel(interval_func);
 	};
 
 	$scope.click_step = () => {
@@ -27,5 +32,5 @@ angular.module('arqcompApp').controller('PlayerDirectiveController', ['$scope', 
 		$scope.state = 'playing';
 	};
 
-	setTimeout(()=>{$('[data-tooltip]').tooltip()}, 50);
+	$timeout(()=>{$('[data-tooltip]').tooltip()}, 50);
 }]);

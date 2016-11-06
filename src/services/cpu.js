@@ -35,7 +35,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
         stages['F'].instruction.operation = parsed.func_name;
         switch(parsed.func_name){
             case 'JMP':
-                Registers.set('$pc', parsed.details[1]);
+                Registers.set('$pc', parseInt(parsed.details[1]));
                 break;
             case 'JE':
             case 'JNE':
@@ -60,7 +60,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
             case 'ADDI':
                 stages['D'].instruction.write_register = details[1];
                 ULA.set_val1(Registers.get(details[2]));
-                ULA.set_val2(details[3]);
+                ULA.set_val2(parseInt(details[3]));
                 ULA.set_func('add');
                 break;
             case 'ADD':
@@ -72,7 +72,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
             case 'SUBI':
                 stages['D'].instruction.write_register = details[1];
                 ULA.set_val1(Registers.get(details[2]));
-                ULA.set_val2(details[3]);
+                ULA.set_val2(parseInt(details[3]));
                 ULA.set_func('sub');
                 break;
             case 'SUB':
@@ -84,7 +84,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
             case 'MULI':
                 stages['D'].instruction.write_register = details[1];
                 ULA.set_val1(Registers.get(details[2]));
-                ULA.set_val2(details[3]);
+                ULA.set_val2(parseInt(details[3]));
                 ULA.set_func('mul');
                 break;
             case 'MUL':
@@ -191,5 +191,6 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
 
     return {
         clock: clock,
+        debug: stages,
     }
 }]);
