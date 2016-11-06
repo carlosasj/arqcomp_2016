@@ -5,7 +5,7 @@ angular.module("arqcompApp").controller('ConfigCtrl', ['$scope', '$rootScope', '
         $scope.form = $rootScope.asm_config;
     } else {
         $scope.form = {
-            selected_code: {},
+            selected_code: Instructions.predefinedCodes[0],
             prediction_type: 0,
             number_of_bits: 1,
         };

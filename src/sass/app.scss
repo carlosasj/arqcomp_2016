@@ -26,6 +26,14 @@ body {
 table.thin-table {
   td {
     padding: 0;
+
+    &.fix-center {
+      padding-right: 1rem;
+    }
+
+    &.disabled {
+      color: transparentize($off-black, .4);
+    }
   }
 
   input {
@@ -57,4 +65,8 @@ table.thin-table {
       width: 90%;
     }
   }
+}
+
+.active-pc {
+  background: #FC8 !important;
 }

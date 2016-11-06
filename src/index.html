@@ -85,7 +85,7 @@
                         </div>
                         <div class="row">
                             <div class="s12 col">
-                                <button class="btn" ng-click="validate_and_change_tab(form)">Executar</button>
+                                <button class="btn" ng-click="validate_and_change_tab(form)">Executar <i class="material-icons right">arrow_forward</i></button>
                             </div>
                         </div>
                     </div>
@@ -94,8 +94,14 @@
         </div>
         <div ng-if="tab == 'exec'" ng-controller="ExecCtrl">
             <div class="row">
+                <div class="s4 col">
+                    <instructions-directive></instructions-directive>
+                </div>
+                <div class="s3 col">
+                    <registers-directive></registers-directive>
+                </div>
                 <div class="s12 col">
-                    <button class="btn" ng-click="back_to_config()">Configurar</button>
+                    <button class="btn" ng-click="back_to_config()"><i class="material-icons left">arrow_back</i> Configurar</button>
                 </div>
             </div>
         </div>

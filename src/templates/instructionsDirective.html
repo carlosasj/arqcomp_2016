@@ -1,0 +1,13 @@
+<div class="card">
+	<div class="card-content">
+		<span class="card-title">Código: {{selected_code.title}}</span>
+		<table class="striped thin-table code-table">
+			<tbody>
+				<tr ng-repeat="(idx, line) in selected_code.code" ng-class="{'active-pc': idx*4 == registers['$pc']}">
+					<td>{{idx*4}}</td>
+					<td>{{line}}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
