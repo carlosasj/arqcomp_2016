@@ -18,74 +18,76 @@
     </nav>
 </div>
     <main ng-controller="MainCtrl" ng-cloak>
-        <div ng-if="tab == 'config'" class="row" ng-controller="ConfigCtrl">
-            <div class="s6 col">
-                <div class="card">
-                    <div class="card-content">
-                        <div class="row">
-                            <div class="col s12" ng-if="error=='selected_code_not_defined'">
-                                <div class="card-panel red">
-                                    O código selecionado é inválido
+        <div ng-if="tab == 'config'" ng-controller="ConfigCtrl">
+            <div class="row">
+                <div class="s12 col">
+                    <button class="btn right" ng-click="validate_and_change_tab(form)">Executar <i class="material-icons right">arrow_forward</i></button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="s6 col">
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="row">
+                                <div class="col s12" ng-if="error=='selected_code_not_defined'">
+                                    <div class="card-panel red">
+                                        O código selecionado é inválido
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="col s12">
-                                <label>Selecione o código {{instructions_db[0].title}}</label>
-                                <select class="browser-default" ng-model="form.selected_code" ng-options="code.title for (idx, code) in instructions_db">
-                                </select>
-                            </div>
-                            <div class="col s12">
-                                <table class="striped thin-table code-table">
-                                    <tbody>
-                                        <tr ng-repeat="(idx, line) in form.selected_code.code">
-                                            <td>{{idx*4}}</td>
-                                            <td>{{line}}</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <div class="col s12">
+                                    <label>Selecione o código {{instructions_db[0].title}}</label>
+                                    <select class="browser-default" ng-model="form.selected_code" ng-options="code.title for (idx, code) in instructions_db">
+                                    </select>
+                                </div>
+                                <div class="col s12">
+                                    <table class="striped thin-table code-table">
+                                        <tbody>
+                                            <tr ng-repeat="(idx, line) in form.selected_code.code">
+                                                <td>{{idx*4}}</td>
+                                                <td>{{line}}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="s6 col">
-                <div class="card">
-                    <div class="card-content">
-                        <div class="row">
-                            <div class="col s12" ng-if="error=='prediction_type_not_defined' || error=='prediction_type_not_in_range'">
-                                <div class="card-panel red">
-                                    O tipo de predição de desvio selecionado é inválido
+                <div class="s6 col">
+                    <div class="card">
+                        <div class="card-content">
+                            <div class="row">
+                                <div class="col s12" ng-if="error=='prediction_type_not_defined' || error=='prediction_type_not_in_range'">
+                                    <div class="card-panel red">
+                                        O tipo de predição de desvio selecionado é inválido
+                                    </div>
+                                </div>
+                                <div class="s12 col">
+                                    <span class="card-title">Configurações</span>
+                                    <p>
+                                        <input type="radio" id="type_0" ng-model="form.prediction_type" value="0"/>
+                                        <label for="type_0">Nunca desvia</label>
+                                    </p>
+                                    <p>
+                                        <input type="radio" id="type_1" ng-model="form.prediction_type" value="1"/>
+                                        <label for="type_1">Sempre desvia</label>
+                                    </p>
+                                    <p>
+                                        <input type="radio" id="type_2" ng-model="form.prediction_type" value="2"/>
+                                        <label for="type_2">Predição com N bits</label>
+                                    </p>
                                 </div>
                             </div>
-                            <div class="s12 col">
-                                <span class="card-title">Configurações</span>
-                                <p>
-                                    <input type="radio" id="type_0" ng-model="form.prediction_type" value="0"/>
-                                    <label for="type_0">Nunca desvia</label>
-                                </p>
-                                <p>
-                                    <input type="radio" id="type_1" ng-model="form.prediction_type" value="1"/>
-                                    <label for="type_1">Sempre desvia</label>
-                                </p>
-                                <p>
-                                    <input type="radio" id="type_2" ng-model="form.prediction_type" value="2"/>
-                                    <label for="type_2">Predição com N bits</label>
-                                </p>
+                            <div class="col s12">
+                                <div class="card-panel red" ng-if="error=='number_of_bits_not_in_range'">
+                                    O número de bits deve ser maior ou igual a 1 e menor ou igual a 8
+                                </div>
                             </div>
-                        </div>
-                        <div class="col s12">
-                            <div class="card-panel red" ng-if="error=='number_of_bits_not_in_range'">
-                                O número de bits deve ser maior ou igual a 1 e menor ou igual a 8
-                            </div>
-                        </div>
-                        <div class="row" ng-show="form.prediction_type == 2">
-                            <div class="input-field col s12">
-                                <input ng-model="form.number_of_bits" id="first_name" type="number" class="validate" min="1" max="8">
-                                <label for="first_name">Número de bits (de 1 a 8)</label>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="s12 col">
-                                <button class="btn" ng-click="validate_and_change_tab(form)">Executar <i class="material-icons right">arrow_forward</i></button>
+                            <div class="row" ng-show="form.prediction_type == 2">
+                                <div class="input-field col s12">
+                                    <input ng-model="form.number_of_bits" id="first_name" type="number" class="validate" min="1" max="8">
+                                    <label for="first_name">Número de bits (de 1 a 8)</label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -94,16 +96,24 @@
         </div>
         <div ng-if="tab == 'exec'" ng-controller="ExecCtrl">
             <div class="row">
+                <div class="s12 col">
+                    <button class="btn" ng-click="back_to_config()"><i class="material-icons left">arrow_back</i> Configurar</button>
+                </div>
+            </div>
+            <div class="row">
                 <div class="s4 col">
                     <instructions-directive></instructions-directive>
                 </div>
                 <div class="s3 col">
                     <registers-directive></registers-directive>
                 </div>
-                <div class="s12 col">
-                    <button class="btn" ng-click="back_to_config()"><i class="material-icons left">arrow_back</i> Configurar</button>
+            </div>
+            <div class="row">
+                <div class="s4 col">
+                    <player-directive></player-directive>
                 </div>
             </div>
+
         </div>
         <!--<registers-directive></registers-directive>-->
     </main>

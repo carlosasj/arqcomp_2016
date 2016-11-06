@@ -22,7 +22,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
 
     var fetch = () => {
         // program counter - próxima instrução a ser lida
-        var pc = Registers.get('$pc'); 
+        var pc = Registers.get('$pc');
         stages['F'].instruction = {
             number: pc,
             verbose: Instructions.get(pc),
@@ -160,7 +160,8 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
         // W - Write; Escreve o resultado no registrador de destino
         var stg = ["F", "D", "E", "W"];
         for (var item in stg) {
-            stages[item] = {
+            console.log(stg[item]);
+            stages[stg[item]] = {
                 instruction: {
                     instruction_number: null,
                     instruction_verbose: null,
