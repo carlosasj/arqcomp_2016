@@ -1,5 +1,5 @@
-angular.module("arqcompApp").controller('ConfigCtrl', ['$scope', '$rootScope', 'Instruction', function ($scope, $rootScope, Instruction) {
-    $scope.instructions_db = Instruction.predefinedCodes;
+angular.module("arqcompApp").controller('ConfigCtrl', ['$scope', '$rootScope', 'Instructions', function ($scope, $rootScope, Instructions) {
+    $scope.instructions_db = Instructions.predefinedCodes;
 
     if ($rootScope.asm_config) {
         $scope.form = $rootScope.asm_config;

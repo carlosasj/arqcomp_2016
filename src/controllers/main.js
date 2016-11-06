@@ -1,4 +1,4 @@
-angular.module("arqcompApp").controller('MainCtrl', ['$scope', 'Instruction', function ($scope, Instruction) {
+angular.module("arqcompApp").controller('MainCtrl', ['$scope', 'Instructions', function ($scope, Instructions) {
     $scope.tab = 'config';
 
     $scope.$on('change-tab-to', (event, arg) => {
