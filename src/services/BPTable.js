@@ -7,9 +7,11 @@ angular.module('arqcompApp').factory('BPTable', ['$rootScope', function ($rootSc
     $rootScope.$on('reset', reset);
     $rootScope.$on('change-tab-to', (event, arg) => {
         if(arg == 'exec'){
-            max_count = 1 << ($rootScope.asm_config.number_of_bits - 1);
+            max_count = (1 << $rootScope.asm_config.number_of_bits)-1;
+
         }
     });
+    max_count = (1 << $rootScope.asm_config.number_of_bits)-1;
     return {
         desviou: line => {
             table[line] = Math.min(table[line] + 1, max_count);

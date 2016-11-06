@@ -1,14 +1,14 @@
 angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions', '$rootScope', 'BPTable', function (ULA, Registers, Instructions, $rootScope, BPTable) {
 
     var all_functions = {
-        'ADDI': {regex: /^ADDI +(\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
-        'ADD' : {regex: /^ADD +(\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
-        'SUBI': {regex: /^SUBI +(\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
-        'SUB' : {regex: /^SUB +(\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
-        'MULI': {regex: /^MULI +(\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
-        'MUL' : {regex: /^MUL +(\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
-        'CMP' : {regex: /^CMP +(\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
-        'MOV' : {regex: /^MOV +(\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'ADDI': {regex: /^ADDI +(\$r[0-7]) +(\$0|\$r[0-7]) +(\d+)([ \t]*#.*)?$/, },
+        'ADD' : {regex: /^ADD +(\$r[0-7]) +(\$0|\$r[0-7]) +(\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'SUBI': {regex: /^SUBI +(\$r[0-7]) +(\$0|\$r[0-7]) +(\d+)([ \t]*#.*)?$/, },
+        'SUB' : {regex: /^SUB +(\$r[0-7]) +(\$0|\$r[0-7]) +(\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'MULI': {regex: /^MULI +(\$r[0-7]) +(\$0|\$r[0-7]) +(\d+)([ \t]*#.*)?$/, },
+        'MUL' : {regex: /^MUL +(\$r[0-7]) +(\$0|\$r[0-7]) +(\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'CMP' : {regex: /^CMP +(\$0|\$r[0-7]) +(\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'MOV' : {regex: /^MOV +(\$r[0-7]) +(\$0|\$r[0-7])([ \t]*#.*)?$/, },
         'JMP' : {regex: /^JMP +(\d+)([ \t]*#.*)?$/, },
         'JE'  : {regex: /^JE +(\d+)([ \t]*#.*)?$/, },
         'JNE' : {regex: /^JNE +(\d+)([ \t]*#.*)?$/, },
@@ -18,6 +18,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
         'HLT' : {regex: /^HLT([ \t]*#.*)?$/, },
     };
     var stages = {};
+    var count_clocks = 0;
 
     // impede que o PC seja incrementado na fase de fetch
     var bubble = false;
@@ -163,6 +164,9 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
                         Registers.set('$pc', stages['E'].instruction.alternative);
                         stall('F');
                         stall('D');
+                        $rootScope.$broadcast('BPTable-errou');
+                    } else {
+                        $rootScope.$broadcast('BPTable-acertou');
                     }
                     break;
                 case '1': // Sempre desvia
@@ -170,22 +174,31 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
                         Registers.set('$pc', stages['E'].instruction.alternative);
                         stall('F');
                         stall('D');
+                        $rootScope.$broadcast('BPTable-errou');
+                    } else {
+                        $rootScope.$broadcast('BPTable-acertou');
                     }
                     break;
                 case '2': // N bits
                     if(condition){
-                        BPTable.desviou();
+                        BPTable.desviou(stages['E'].instruction.number);
                         if(!stages['E'].instruction.desviou){
                             Registers.set('$pc', stages['E'].instruction.alternative);
                             stall('F');
                             stall('D');
+                            $rootScope.$broadcast('BPTable-errou');
+                        } else {
+                            $rootScope.$broadcast('BPTable-acertou');
                         }
                     } else {
-                        BPTable.ndesviou();
+                        BPTable.ndesviou(stages['E'].instruction.number);
                         if(stages['E'].instruction.desviou){
                             Registers.set('$pc', stages['E'].instruction.alternative);
                             stall('F');
                             stall('D');
+                            $rootScope.$broadcast('BPTable-errou');
+                        } else {
+                            $rootScope.$broadcast('BPTable-acertou');
                         }
                     }
                     break;
@@ -207,6 +220,9 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
                 break;
             case 'JLT':
                 branch(ULA.output() < 0);
+                break;
+            case 'HLT':
+                $rootScope.$broadcast('halt');
                 break;
             default:
                 ULA.execute();
@@ -258,6 +274,8 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
         stages['D'].execute = decode;
         stages['E'].execute = execute;
         stages['W'].execute = writeback;
+
+        count_clocks = 0;
     };
     init();
     $rootScope.$on('reset', init);
@@ -272,10 +290,15 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
         stages['D'].execute();
         stages['F'].execute();
         Registers.endclock();
+
+        count_clocks += 1;
+
+        $rootScope.$broadcast('CPU-clock');
     };
 
     return {
         clock: clock,
         debug: stages,
+        count_clocks: () => { return count_clocks; },
     }
 }]);

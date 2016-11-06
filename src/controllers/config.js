@@ -29,6 +29,7 @@ angular.module("arqcompApp").controller('ConfigCtrl', ['$scope', '$rootScope', '
         if (valid == true) {
             $rootScope.asm_config = form;
             $rootScope.$broadcast('change-tab-to', 'exec');
+            Instructions.setCode(form.selected_code.idx);
         } else {
             $scope.error = valid;
         }

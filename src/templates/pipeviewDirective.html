@@ -12,6 +12,7 @@
 				</tr>
 			</tbody>
 		</table>
-		<pre>{{data | json}}</pre>
+		<p>N&deg; de clocks: {{count_clocks}}</p>
+		<p>Acertou {{count_hits}} de {{count_hits+count_miss}} predições ({{(((count_hits+count_miss) > 0)? 100*count_hits/(count_hits+count_miss) : 0) | number:1}} %)</p>
 	</div>
 </div>

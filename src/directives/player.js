@@ -13,6 +13,9 @@ angular.module('arqcompApp').controller('PlayerDirectiveController', ['$scope', 
 	$scope.$on('reset', () =>{
 		$scope.state = 'paused';
 	});
+	$scope.$on('halt', () =>{
+		$scope.state = 'paused';
+	});
 
 	var loop = () => {
 		if ($scope.state == 'playing') {

@@ -42,7 +42,7 @@
                                 <div class="col s12">
                                     <table class="striped thin-table code-table">
                                         <tbody>
-                                            <tr ng-repeat="(idx, line) in form.selected_code.code">
+                                            <tr ng-repeat="(idx, line) in form.selected_code.code track by idx">
                                                 <td>{{idx*4}}</td>
                                                 <td ng-bind-html="line | syntax"></td>
                                             </tr>
