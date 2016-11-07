@@ -40289,6 +40289,172 @@ Picker.extend( 'pickadate', DatePicker )
     }; // Plugin end
 }( jQuery ));
 angular.module('arqcompApp', ['ngSanitize']);
+angular.module('arqcompApp').directive('debugcpuDirective', [function() {
+	return {
+		restrict: 'AE',
+		templateUrl: 'arqcomp_2016/templates/debugcpuDirective.html',
+		replace: true,
+		controller: 'DebugcpuDirectiveController',
+	};
+}]);
+
+angular.module('arqcompApp').controller('DebugcpuDirectiveController', ['$scope', 'CPU', function ($scope, CPU) {
+	$scope.debugcpu = CPU.debug;
+}]);
+angular.module('arqcompApp').directive('debugulaDirective', [function() {
+	return {
+		restrict: 'AE',
+		templateUrl: 'templates/debugulaDirective.html',
+		replace: true,
+		controller: 'DebugulaDirectiveController',
+	};
+}]);
+
+angular.module('arqcompApp').controller('DebugulaDirectiveController', ['$scope', 'ULA', function ($scope, ULA) {
+	// $scope.debugula = ULA.debug();
+
+	$scope.$watch(ULA.debug, val => {
+		$scope.debugula = val;
+	});
+}]);
+angular.module('arqcompApp').directive('instructionsDirective', [function() {
+	return {
+		restrict: 'AE',
+		templateUrl: 'arqcomp_2016/templates/instructionsDirective.html',
+		replace: true,
+		controller: 'InstructionsDirectiveController',
+	};
+}]);
+
+angular.module('arqcompApp').controller('InstructionsDirectiveController', ['$scope', '$rootScope', 'Instructions', 'Registers', function ($scope, $rootScope, Instructions, Registers) {
+	$scope.registers = Registers.registers;
+	$scope.selected_code = $rootScope.asm_config.selected_code;
+}]);
+angular.module('arqcompApp').directive('pipeviewDirective', [function() {
+	return {
+		restrict: 'AE',
+		templateUrl: 'arqcomp_2016/templates/pipeviewDirective.html',
+		replace: true,
+		controller: 'PipeviewDirectiveController',
+	};
+}]);
+
+angular.module('arqcompApp').controller('PipeviewDirectiveController', ['$scope', 'CPU', function ($scope, CPU) {
+	$scope.mock = {
+		'Fetch': 'F',
+		'Decode': 'D',
+		'Execute': 'E',
+		'Write': 'W',
+	};
+	$scope.stages = CPU.debug;
+}]);
+angular.module('arqcompApp').directive('playerDirective', [function() {
+	return {
+		restrict: 'AE',
+		templateUrl: 'arqcomp_2016/templates/playerDirective.html',
+		replace: true,
+		controller: 'PlayerDirectiveController',
+	};
+}]);
+
+angular.module('arqcompApp').controller('PlayerDirectiveController', ['$scope', '$interval', '$timeout', 'CPU', function ($scope, $interval, $timeout, CPU) {
+	$scope.state = 'paused';
+	$scope.delay = 500;
+	$scope.$on('reset', () =>{
+		$scope.state = 'paused';
+	});
+
+	var loop = () => {
+		if ($scope.state == 'playing') {
+			CPU.clock();
+			$timeout(loop, $scope.delay);
+		}
+	};
+
+	$scope.click_play = () => {
+		$scope.state = 'playing';
+		loop();
+	};
+
+	$scope.click_pause = () => {
+		$scope.state = 'paused';
+	};
+
+	$scope.click_step = () => {
+		$scope.state = 'paused';
+		CPU.clock();
+	};
+
+	$scope.click_ff = () => {
+		$scope.state = 'playing';
+	};
+
+	$timeout(()=>{$('[data-tooltip]').tooltip()}, 50);
+}]);
+angular.module('arqcompApp').directive('registersDirective', [function() {
+	return {
+		restrict: 'AE',
+		templateUrl: 'arqcomp_2016/templates/registersDirective.html',
+		replace: true,
+		controller: 'RegistersDirectiveController',
+	};
+}]);
+
+angular.module('arqcompApp').controller('RegistersDirectiveController', ['$scope', 'Registers', function ($scope, Registers) {
+	$scope.registers = Registers.registers;
+	$scope.keys = Object.keys(Registers.registers);
+}]);
+angular.module("arqcompApp").controller('ConfigCtrl', ['$scope', '$rootScope', 'Instructions', function ($scope, $rootScope, Instructions) {
+    $rootScope.$broadcast('reset');
+    $scope.instructions_db = Instructions.predefinedCodes;
+
+    if ($rootScope.asm_config) {
+        $scope.form = $rootScope.asm_config;
+    } else {
+        $scope.form = {
+            selected_code: Instructions.predefinedCodes[0],
+            prediction_type: '0',
+            number_of_bits: 1,
+        };
+
+    }
+
+    $scope.error = '';
+
+    var validate = (form) => {
+        if (typeof form.selected_code == 'undefined') return 'selected_code_not_defined';
+        if (typeof form.prediction_type == 'undefined') return 'prediction_type_not_defined';
+        if (form.prediction_type == 2 && !form.number_of_bits >= 1 && !form.number_of_bits <= 8) return 'number_of_bits_not_in_range';
+        if (form.prediction_type < 0 || form.prediction_type > 2) return 'prediction_type_not_in_range';
+
+        return true;
+    };
+
+    $scope.validate_and_change_tab = (form) => {
+        var valid = validate(form);
+        if (valid == true) {
+            $rootScope.asm_config = form;
+            $rootScope.$broadcast('change-tab-to', 'exec');
+        } else {
+            $scope.error = valid;
+        }
+    };
+
+    setTimeout(Materialize.updateTextFields, 10);
+}]);
+angular.module("arqcompApp").controller('ExecCtrl', ['$scope', '$rootScope', 'Instructions', function ($scope, $rootScope, Instructions) {
+    $scope.back_to_config = () => {
+        $rootScope.$broadcast('change-tab-to', 'config');
+    };
+}]);
+angular.module("arqcompApp").controller('MainCtrl', ['$scope', 'Instructions', function ($scope, Instructions) {
+    $scope.tab = 'config';
+
+    $scope.$on('change-tab-to', (event, arg) => {
+        $scope.tab = arg;
+    });
+
+}]);
 angular.module('arqcompApp').filter('syntax', ['$sce', $sce => {
 
     var wrapper = (txt, regex, prefix, sufix) => {
@@ -40345,150 +40511,6 @@ angular.module('arqcompApp').filter('syntax', ['$sce', $sce => {
 }]);
 
 
-angular.module("arqcompApp").controller('ConfigCtrl', ['$scope', '$rootScope', 'Instructions', function ($scope, $rootScope, Instructions) {
-    $rootScope.$broadcast('reset');
-    $scope.instructions_db = Instructions.predefinedCodes;
-
-    if ($rootScope.asm_config) {
-        $scope.form = $rootScope.asm_config;
-    } else {
-        $scope.form = {
-            selected_code: Instructions.predefinedCodes[0],
-            prediction_type: 0,
-            number_of_bits: 1,
-        };
-    }
-
-    $scope.error = '';
-
-    var validate = (form) => {
-        if (typeof form.selected_code == 'undefined') return 'selected_code_not_defined';
-        if (typeof form.prediction_type == 'undefined') return 'prediction_type_not_defined';
-        if (form.prediction_type == 2 && !form.number_of_bits >= 1 && !form.number_of_bits <= 8) return 'number_of_bits_not_in_range';
-        if (form.prediction_type < 0 || form.prediction_type > 2) return 'prediction_type_not_in_range';
-
-        return true;
-    };
-
-    $scope.validate_and_change_tab = (form) => {
-        var valid = validate(form);
-        if (valid == true) {
-            $rootScope.asm_config = form;
-            $rootScope.$broadcast('change-tab-to', 'exec');
-        } else {
-            $scope.error = valid;
-        }
-    };
-
-    setTimeout(Materialize.updateTextFields, 10);
-}]);
-angular.module("arqcompApp").controller('ExecCtrl', ['$scope', '$rootScope', 'Instructions', function ($scope, $rootScope, Instructions) {
-    $scope.back_to_config = () => {
-        $rootScope.$broadcast('change-tab-to', 'config');
-    };
-}]);
-angular.module("arqcompApp").controller('MainCtrl', ['$scope', 'Instructions', function ($scope, Instructions) {
-    $scope.tab = 'config';
-
-    $scope.$on('change-tab-to', (event, arg) => {
-        $scope.tab = arg;
-    });
-
-}]);
-angular.module('arqcompApp').directive('debugcpuDirective', [function() {
-	return {
-		restrict: 'AE',
-		templateUrl: 'templates/debugcpuDirective.html',
-		replace: true,
-		controller: 'DebugcpuDirectiveController',
-	};
-}]);
-
-angular.module('arqcompApp').controller('DebugcpuDirectiveController', ['$scope', 'CPU', function ($scope, CPU) {
-	$scope.debugcpu = CPU.debug;
-}]);
-angular.module('arqcompApp').directive('debugulaDirective', [function() {
-	return {
-		restrict: 'AE',
-		templateUrl: 'templates/debugulaDirective.html',
-		replace: true,
-		controller: 'DebugulaDirectiveController',
-	};
-}]);
-
-angular.module('arqcompApp').controller('DebugulaDirectiveController', ['$scope', 'ULA', function ($scope, ULA) {
-	// $scope.debugula = ULA.debug();
-
-	$scope.$watch(ULA.debug, val => {
-		$scope.debugula = val;
-	});
-}]);
-angular.module('arqcompApp').directive('instructionsDirective', [function() {
-	return {
-		restrict: 'AE',
-		templateUrl: 'templates/instructionsDirective.html',
-		replace: true,
-		controller: 'InstructionsDirectiveController',
-	};
-}]);
-
-angular.module('arqcompApp').controller('InstructionsDirectiveController', ['$scope', '$rootScope', 'Instructions', 'Registers', function ($scope, $rootScope, Instructions, Registers) {
-	$scope.registers = Registers.registers;
-	$scope.selected_code = $rootScope.asm_config.selected_code;
-}]);
-angular.module('arqcompApp').directive('playerDirective', [function() {
-	return {
-		restrict: 'AE',
-		templateUrl: 'templates/playerDirective.html',
-		replace: true,
-		controller: 'PlayerDirectiveController',
-	};
-}]);
-
-angular.module('arqcompApp').controller('PlayerDirectiveController', ['$scope', '$interval', '$timeout', 'CPU', function ($scope, $interval, $timeout, CPU) {
-	$scope.state = 'paused';
-	$scope.delay = 500;
-
-	var loop = () => {
-		if ($scope.state == 'playing') {
-			CPU.clock();
-			$timeout(loop, $scope.delay);
-		}
-	};
-
-	$scope.click_play = () => {
-		$scope.state = 'playing';
-		loop();
-	};
-
-	$scope.click_pause = () => {
-		$scope.state = 'paused';
-	};
-
-	$scope.click_step = () => {
-		$scope.state = 'paused';
-		CPU.clock();
-	};
-
-	$scope.click_ff = () => {
-		$scope.state = 'playing';
-	};
-
-	$timeout(()=>{$('[data-tooltip]').tooltip()}, 50);
-}]);
-angular.module('arqcompApp').directive('registersDirective', [function() {
-	return {
-		restrict: 'AE',
-		templateUrl: 'templates/registersDirective.html',
-		replace: true,
-		controller: 'RegistersDirectiveController',
-	};
-}]);
-
-angular.module('arqcompApp').controller('RegistersDirectiveController', ['$scope', 'Registers', function ($scope, Registers) {
-	$scope.registers = Registers.registers;
-	$scope.keys = Object.keys(Registers.registers);
-}]);
 angular.module('arqcompApp').factory('Instructions', [function () {
     var predefinedCodes = [
         {
@@ -40500,12 +40522,12 @@ angular.module('arqcompApp').factory('Instructions', [function () {
                 'ADDI $r4 $0 2',//i
                 'NOP',//RAW
                 'CMP  $r4 $r1',
-                'JE   44',
+                'JE   48',
                 'ADD  $r5 $r2 $r3',//f[i+1] = f[i] + f[i-1]
                 'MOV  $r2 $r3',
                 'MOV  $r3 $r5',
                 'ADDI $r4 $r4 1',
-                'JMP  12',
+                'JMP  16',
                 'HLT'
             ]
         },
@@ -40525,19 +40547,19 @@ angular.module('arqcompApp').factory('Instructions', [function () {
 angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions', '$rootScope', function (ULA, Registers, Instructions, $rootScope) {
 
     var all_functions = {
-        'ADDI': {regex: /^ADDI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
-        'ADD' : {regex: /^ADD (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
-        'SUBI': {regex: /^SUBI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
-        'SUB' : {regex: /^SUB (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
-        'MULI': {regex: /^MULI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
-        'MUL' : {regex: /^MUL (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
-        'CMP' : {regex: /^CMP (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
-        'MOV' : {regex: /^MOV (\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
-        'JMP' : {regex: /^JMP (\d+)([ \t]*#.*)?$/, },
-        'JE'  : {regex: /^JE (\d+)([ \t]*#.*)?$/, },
-        'JNE' : {regex: /^JNE (\d+)([ \t]*#.*)?$/, },
-        'JGT' : {regex: /^JGT (\d+)([ \t]*#.*)?$/, },
-        'JLT' : {regex: /^JLT (\d+)([ \t]*#.*)?$/, },
+        'ADDI': {regex: /^ADDI +(\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
+        'ADD' : {regex: /^ADD +(\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'SUBI': {regex: /^SUBI +(\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
+        'SUB' : {regex: /^SUB +(\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'MULI': {regex: /^MULI +(\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
+        'MUL' : {regex: /^MUL +(\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'CMP' : {regex: /^CMP +(\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'MOV' : {regex: /^MOV +(\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'JMP' : {regex: /^JMP +(\d+)([ \t]*#.*)?$/, },
+        'JE'  : {regex: /^JE +(\d+)([ \t]*#.*)?$/, },
+        'JNE' : {regex: /^JNE +(\d+)([ \t]*#.*)?$/, },
+        'JGT' : {regex: /^JGT +(\d+)([ \t]*#.*)?$/, },
+        'JLT' : {regex: /^JLT +(\d+)([ \t]*#.*)?$/, },
         'NOP' : {regex: /^NOP([ \t]*#.*)?$/, },
         'HLT' : {regex: /^HLT([ \t]*#.*)?$/, },
     };
@@ -40553,8 +40575,9 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
             write_register:'',
             operation:'NOP',
             details: null,
+            alternative:0,
         };
-    }
+    };
 
     var fetch = () => {
         if(bubble) return;
@@ -40566,6 +40589,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
             write_register:'',
             operation:'NOP',
             details: null,
+            alternative:0,
         };
         var parsed = parse(stages['F'].instruction.verbose);
         stages['F'].instruction.details = parsed.details;
@@ -40579,7 +40603,23 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
             case 'JGT':
             case 'JLT':
                 //TODO branch prediction
-                Registers.set('$pc', pc + 4); // nunca desvia
+                console.log($rootScope.asm_config.prediction_type);
+                switch ($rootScope.asm_config.prediction_type){
+                    case '0': // Nunca desvia
+                        Registers.set('$pc', pc + 4);
+                        stages['F'].instruction.alternative = parseInt(parsed.details[1]);
+                        break;
+                    case '1': // Sempre desvia
+                        Registers.set('$pc', parseInt(parsed.details[1]));
+                        stages['F'].instruction.alternative = pc + 4;
+                        break;
+                    case '2': // N bits
+                        console.log("aaa");
+                        break;
+                    default:
+                        console.log("ddd");
+                        break;
+                }
                 // Se a previsão falhar, trocar instrução seguinte por bolha.
                 break;
             case 'HLT':
@@ -40654,39 +40694,42 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
     };
 
     var execute = () => {
+        var branch = condition => {
+            switch ($rootScope.asm_config.prediction_type){
+                case '0': // Nunca desvia
+                    if(condition){
+                        Registers.set('$pc', stages['E'].instruction.alternative);
+                        stall('F');
+                        stall('D');
+                    }
+                    break;
+                case '1': // Sempre desvia
+                    if(!condition){
+                        Registers.set('$pc', stages['E'].instruction.alternative);
+                        stall('F');
+                        stall('D');
+                    }
+                    break;
+                case '2': // N bits
+                    break;
+                default:
+                    break;
+            }
+
+        };
         var details = stages['E'].instruction.details;
         switch(stages['E'].instruction.operation){
             case 'JE':
-                console.log(details[1]);
-                if(ULA.output() == 0){
-                    Registers.set('$pc', parseInt(details[1]));
-                    stall('F');
-                    stall('D');
-                }
+                branch(ULA.output() == 0);
                 break;
             case 'JNE':
-                bubble = true;
-                if(ULA.output() != 0){
-                    Registers.set('$pc', parseInt(details[1]));
-                    stall('F');
-                    stall('D');
-                }
+                branch(ULA.output() != 0);
                 break;
             case 'JGT':
-                bubble = true;
-                if(ULA.output() > 0){
-                    Registers.set('$pc', parseInt(details[1]));
-                    stall('F');
-                    stall('D');
-                }
+                branch(ULA.output() > 0);
                 break;
             case 'JLT':
-                bubble = true;
-                if(ULA.output() < 0){
-                    Registers.set('$pc', parseInt(details[1]));
-                    stall('F');
-                    stall('D');
-                }
+                branch(ULA.output() < 0);
                 break;
             default:
                 ULA.execute();
@@ -40726,6 +40769,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
                     write_register: '',
                     operation: 'NOP',
                     details: null,
+                    alternative:0,
                 },
 
                 execute: none,
@@ -40738,7 +40782,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
         stages['W'].execute = writeback;
     };
     init();
-    $rootScope.$on('reset', init)
+    $rootScope.$on('reset', init);
 
     var clock = () => {
         bubble = false;
