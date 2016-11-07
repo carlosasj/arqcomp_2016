@@ -46,7 +46,7 @@ gulp.task('copy:html', function() {
             sortClassName: true
         }))
         .pipe(copy())
-        .pipe(gulp.dest('./public/arqcomp_2016/'))
+        .pipe(gulp.dest('./public/arqcomp_2016'))
         .pipe(connect.reload());
 });
 

@@ -1,7 +1,7 @@
 angular.module('arqcompApp').directive('instructionsDirective', [function() {
 	return {
 		restrict: 'AE',
-		templateUrl: 'templates/instructionsDirective.html',
+		templateUrl: 'arqcomp_2016/templates/instructionsDirective.html',
 		replace: true,
 		controller: 'InstructionsDirectiveController',
 	};

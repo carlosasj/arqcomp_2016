@@ -1,7 +1,7 @@
 angular.module('arqcompApp').directive('playerDirective', [function() {
 	return {
 		restrict: 'AE',
-		templateUrl: 'templates/playerDirective.html',
+		templateUrl: 'arqcomp_2016/templates/playerDirective.html',
 		replace: true,
 		controller: 'PlayerDirectiveController',
 	};

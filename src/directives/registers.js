@@ -1,7 +1,7 @@
 angular.module('arqcompApp').directive('registersDirective', [function() {
 	return {
 		restrict: 'AE',
-		templateUrl: 'templates/registersDirective.html',
+		templateUrl: 'arqcomp_2016/templates/registersDirective.html',
 		replace: true,
 		controller: 'RegistersDirectiveController',
 	};

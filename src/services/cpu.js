@@ -31,7 +31,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
             details: null,
             alternative:0,
         };
-    }
+    };
 
     var fetch = () => {
         if(bubble) return;
@@ -236,7 +236,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
         stages['W'].execute = writeback;
     };
     init();
-    $rootScope.$on('reset', init)
+    $rootScope.$on('reset', init);
 
     var clock = () => {
         bubble = false;
