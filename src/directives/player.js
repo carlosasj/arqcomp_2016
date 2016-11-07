@@ -21,6 +21,13 @@ angular.module('arqcompApp').controller('PlayerDirectiveController', ['$scope', 
 		}
 	};
 
+	var ff = () => {
+		if ($scope.state == 'playing') {
+			CPU.clock();
+			$timeout(ff, 25);
+		}
+	};
+
 	$scope.click_play = () => {
 		$scope.state = 'playing';
 		loop();
@@ -37,6 +44,7 @@ angular.module('arqcompApp').controller('PlayerDirectiveController', ['$scope', 
 
 	$scope.click_ff = () => {
 		$scope.state = 'playing';
+		ff();
 	};
 
 	$timeout(()=>{$('[data-tooltip]').tooltip()}, 50);

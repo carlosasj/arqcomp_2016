@@ -6,14 +6,14 @@
 				<tr>
 					<th>N</th>
 					<th>Instrução</th>
-					<th class="right" ng-if="asm_config.prediction_type == 2">B.P.</th>
+					<th class="right" ng-if="asm_config.prediction_type == 2">BP</th>
 				</tr>
 			</thead>
 			<tbody>
 				<tr ng-repeat="(idx, line) in selected_code.code" ng-class="{'active-pc': idx*4 == registers['$pc']}">
 					<td>{{idx*4}}</td>
 					<td ng-bind-html="line | syntax"></td>
-					<td ng-if="asm_config.prediction_type == 2"><span ng-show="true">0/{{max_prediction_counter}}</span></td>
+					<td ng-if="asm_config.prediction_type == 2"><span ng-show="check(idx)">{{bptable[idx*4]}}/{{max_prediction_counter}}</span></td>
 				</tr>
 			</tbody>
 		</table>

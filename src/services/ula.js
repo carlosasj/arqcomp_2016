@@ -26,9 +26,9 @@ angular.module('arqcompApp').factory('ULA', [function () {
         },
     };
 
-    var set_func = func => {function_name = func; console.log({'function_name': func});};
-    var set_val1 = val => {val1 = val; console.log({'val1': val});};
-    var set_val2 = val => {val2 = val; console.log({'val2': val});};
+    var set_func = func => {function_name = func;};
+    var set_val1 = val => {val1 = val;};
+    var set_val2 = val => {val2 = val;};
 
     var execute = () => {
         output = functions[function_name](val1, val2)

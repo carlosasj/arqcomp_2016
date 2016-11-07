@@ -9,16 +9,16 @@ angular.module('arqcompApp').factory('Registers', ['$rootScope', function ($root
             return null;
         }
     };
-    var _toset = {}
+    var _toset = {};
     var set = (reg, value) => {
         _toset[reg] = value;
-    }
+    };
     var endclock = () => {
         for(reg in _toset){
             _set(reg, _toset[reg]);
         }
         _toset = {};
-    }
+    };
 
     var get = reg => {
         return (reg in registers)? registers[reg] : null;
@@ -35,7 +35,7 @@ angular.module('arqcompApp').factory('Registers', ['$rootScope', function ($root
         "$r7": 0,
         "$cmp": 0,
         "$pc": 0,
-    }
+    };
     var reset = () => {
         for(key in registers){
             registers[key] = 0;
@@ -43,7 +43,7 @@ angular.module('arqcompApp').factory('Registers', ['$rootScope', function ($root
     };
 
     reset();
-    $rootScope.$on('reset', reset)
+    $rootScope.$on('reset', reset);
 
     return {
         registers: registers,

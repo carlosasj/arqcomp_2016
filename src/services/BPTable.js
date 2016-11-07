@@ -13,15 +13,19 @@ angular.module('arqcompApp').factory('BPTable', ['$rootScope', function ($rootSc
     return {
         desviou: line => {
             table[line] = Math.min(table[line] + 1, max_count);
+            $rootScope.$broadcast('BPTable-changed');
         },
         ndesviou: line => {
             table[line] = Math.max(table[line] - 1, 0);
+            $rootScope.$broadcast('BPTable-changed');
         },
         branch: line => {
             if(typeof table[line] == 'undefined'){
                 table[line] = 0;
             }
+            $rootScope.$broadcast('BPTable-changed');
             return (table[line] << 1) >= max_count;
-        }
+        },
+        get_table: () => { return table },
     }
 }]);
