@@ -40326,9 +40326,19 @@ angular.module('arqcompApp').directive('instructionsDirective', [function() {
 	};
 }]);
 
-angular.module('arqcompApp').controller('InstructionsDirectiveController', ['$scope', '$rootScope', 'Instructions', 'Registers', function ($scope, $rootScope, Instructions, Registers) {
+angular.module('arqcompApp').controller('InstructionsDirectiveController', ['$scope', '$rootScope', 'Instructions', 'Registers', 'BPTable', function ($scope, $rootScope, Instructions, Registers, BPTable) {
 	$scope.registers = Registers.registers;
 	$scope.selected_code = $rootScope.asm_config.selected_code;
+	$scope.max_prediction_counter = (() => {return (1 << $rootScope.asm_config.number_of_bits)-1})();
+	$scope.bptable = {};
+
+	$scope.check = idx => {
+		return typeof $scope.bptable[idx*4] != 'undefined';
+	};
+
+	$scope.$on('BPTable-changed', () => {
+		$scope.bptable = BPTable.get_table();
+	})
 }]);
 angular.module('arqcompApp').directive('pipeviewDirective', [function() {
 	return {
@@ -40346,7 +40356,27 @@ angular.module('arqcompApp').controller('PipeviewDirectiveController', ['$scope'
 		'Execute': 'E',
 		'Write': 'W',
 	};
+	$scope.count_hits = 0;
+	$scope.count_miss = 0;
 	$scope.stages = CPU.debug;
+	$scope.count_clocks = CPU.count_clocks();
+
+	$scope.$on('CPU-clock', () => {
+		$scope.count_clocks = CPU.count_clocks();
+	});
+
+	$scope.$on('reset', () => {
+		$scope.count_hits = 0;
+		$scope.count_miss = 0;
+	});
+
+	$scope.$on('BPTable-errou', () => {
+		$scope.count_miss += 1;
+	});
+
+	$scope.$on('BPTable-acertou', () => {
+		$scope.count_hits += 1;
+	});
 }]);
 angular.module('arqcompApp').directive('playerDirective', [function() {
 	return {
@@ -40363,11 +40393,21 @@ angular.module('arqcompApp').controller('PlayerDirectiveController', ['$scope', 
 	$scope.$on('reset', () =>{
 		$scope.state = 'paused';
 	});
+	$scope.$on('halt', () =>{
+		$scope.state = 'paused';
+	});
 
 	var loop = () => {
 		if ($scope.state == 'playing') {
 			CPU.clock();
 			$timeout(loop, $scope.delay);
+		}
+	};
+
+	var ff = () => {
+		if ($scope.state == 'playing') {
+			CPU.clock();
+			$timeout(ff, 25);
 		}
 	};
 
@@ -40387,6 +40427,7 @@ angular.module('arqcompApp').controller('PlayerDirectiveController', ['$scope', 
 
 	$scope.click_ff = () => {
 		$scope.state = 'playing';
+		ff();
 	};
 
 	$timeout(()=>{$('[data-tooltip]').tooltip()}, 50);
@@ -40435,6 +40476,7 @@ angular.module("arqcompApp").controller('ConfigCtrl', ['$scope', '$rootScope', '
         if (valid == true) {
             $rootScope.asm_config = form;
             $rootScope.$broadcast('change-tab-to', 'exec');
+            Instructions.setCode(form.selected_code.idx);
         } else {
             $scope.error = valid;
         }
@@ -40455,86 +40497,97 @@ angular.module("arqcompApp").controller('MainCtrl', ['$scope', 'Instructions', f
     });
 
 }]);
-angular.module('arqcompApp').filter('syntax', ['$sce', $sce => {
-
-    var wrapper = (txt, regex, prefix, sufix) => {
-        return txt.replace(regex, prefix+'$1'+sufix);
+angular.module('arqcompApp').factory('BPTable', ['$rootScope', function ($rootScope) {
+    var max_count;
+    var table = {};
+    var reset = () => {
+        table = {};
     };
+    $rootScope.$on('reset', reset);
+    $rootScope.$on('change-tab-to', (event, arg) => {
+        if(arg == 'exec'){
+            max_count = (1 << $rootScope.asm_config.number_of_bits)-1;
 
-    var parse_comment = txt => {
-        var regex = /([ \t]*#.*)?$/;
-        var prefix = '<span class="syntax-comment">';
-        var sufix = '</span>';
-        return wrapper(txt, regex, prefix, sufix);
-    };
-
-    var parse_function = txt => {
-        var regex = /^(ADDI|ADD|SUBI|SUB|MULI|MUL|CMP|MOV|JMP|JE|JNE|JGT|JLT|NOP|HLT)/;
-        var prefix = '<span class="syntax-function">';
-        var sufix = '</span>';
-        return wrapper(txt, regex, prefix, sufix);
-    };
-
-    var parse_register = txt => {
-        var regex = /(\$r[0-7]|\$0|\$cmp|\$pc)/g;
-        var prefix = '<span class="syntax-register">';
-        var sufix = '</span>';
-        return wrapper(txt, regex, prefix, sufix);
-    };
-
-    var parse_number = txt => {
-        var regex = /(&nbsp;\d+)/g;
-        var prefix = '<span class="syntax-number">';
-        var sufix = '</span>';
-        return wrapper(txt, regex, prefix, sufix);
-    };
-
-    var parse_spaces = txt => {
-        return txt.replace(/ /g, '&nbsp;');
-    };
-
-    return function(line) {
-        return $sce.trustAsHtml(
-            parse_register(
-                parse_function(
-                    parse_comment(
-                        parse_number(
-                            parse_spaces(
-                                line
-                            )
-                        )
-                    )
-                )
-            )
-        );
-    };
+        }
+    });
+    max_count = (1 << $rootScope.asm_config.number_of_bits)-1;
+    return {
+        desviou: line => {
+            table[line] = Math.min(table[line] + 1, max_count);
+            $rootScope.$broadcast('BPTable-changed');
+        },
+        ndesviou: line => {
+            table[line] = Math.max(table[line] - 1, 0);
+            $rootScope.$broadcast('BPTable-changed');
+        },
+        branch: line => {
+            if(typeof table[line] == 'undefined'){
+                table[line] = 0;
+            }
+            $rootScope.$broadcast('BPTable-changed');
+            return (table[line] << 1) >= max_count;
+        },
+        get_table: () => { return table },
+    }
 }]);
-
-
 angular.module('arqcompApp').factory('Instructions', [function () {
     var predefinedCodes = [
         {
+            idx:0,
             title: 'Fibonacci',
             code: [
-                'ADDI $r1 $0 4 # Enquanto i < 4',
-                'ADDI $r2 $0 1',//f[i-1]
-                'ADDI $r3 $0 1',//f[i]
-                'ADDI $r4 $0 2',//i
-                'NOP',//RAW
-                'CMP  $r4 $r1',
-                'JE   48',
-                'ADD  $r5 $r2 $r3',//f[i+1] = f[i] + f[i-1]
-                'MOV  $r2 $r3',
-                'MOV  $r3 $r5',
-                'ADDI $r4 $r4 1',
-                'JMP  16',
+                'ADDI $r1 $0 10    # i = 10;',
+                'ADDI $r2 $0 1     # a = 1;',
+                'ADDI $r3 $0 1     # b = 1;',
+                'ADDI $r4 $0 2     # c = 2;',
+                'ADDI $r5 $0 2     # n = 2;',
+                'NOP',
+                'CMP  $r4 $r1      # while(c != i){',
+                'JE   56',
+                'ADD  $r5 $r2 $r3  #   n = a + b;',
+                'MOV  $r2 $r3      #   a = b;',
+                'NOP',
+                'MOV  $r3 $r5      #   b = n;',
+                'ADDI $r4 $r4 1    #   c++;',
+                'JMP  20           # }',
+                'HLT'
+            ]
+        },
+        {
+            idx:1,
+            title: 'Loop simples',
+            code: [
+                'ADDI $r1 $0 10   # a = 10;',
+                'ADDI $r2 $0  1   # b = 1;',
+                'ADDI $r2 $r2 1   # do{ b++;',
+                'NOP',
+                'CMP  $r1 $r2     # }',
+                'JNE  8           # while (b != a);',
+                'HLT'
+            ]
+        },
+        {
+            idx:2,
+            title: 'Loop aninhado',
+            code: [
+                'ADDI $r6 $0  5   # a = 5;',
+                'ADDI $r7 $0  5   # b = 5;',
+                'ADDI $r1 $r1 1   # for(i=0; i!=a; i++){',
+                'ADDI $r2 $r2 1   #   for(j=0; j!=b; j++){',
+                'ADDI $r3 $r3 1   #     k++;',
+                'CMP  $r2 $r7     #',
+                'JNE  12          # }',
+                'SUBI $r3 $r3 1',
+                'MOV  $r2 $0      #',
+                'CMP  $r1 $r6',
+                'JNE  8           #}',
                 'HLT'
             ]
         },
     ];
     var code = predefinedCodes[0].code;
     return {
-        getCode: codeNumer => {
+        setCode: codeNumber => {
             code = predefinedCodes[codeNumber].code;
         },
         get: pc => {
@@ -40544,17 +40597,17 @@ angular.module('arqcompApp').factory('Instructions', [function () {
         predefinedCodes: predefinedCodes,
     }
 }]);
-angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions', '$rootScope', function (ULA, Registers, Instructions, $rootScope) {
+angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions', '$rootScope', 'BPTable', function (ULA, Registers, Instructions, $rootScope, BPTable) {
 
     var all_functions = {
-        'ADDI': {regex: /^ADDI +(\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
-        'ADD' : {regex: /^ADD +(\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
-        'SUBI': {regex: /^SUBI +(\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
-        'SUB' : {regex: /^SUB +(\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
-        'MULI': {regex: /^MULI +(\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
-        'MUL' : {regex: /^MUL +(\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
-        'CMP' : {regex: /^CMP +(\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
-        'MOV' : {regex: /^MOV +(\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'ADDI': {regex: /^ADDI +(\$r[0-7]) +(\$0|\$r[0-7]) +(\d+)([ \t]*#.*)?$/, },
+        'ADD' : {regex: /^ADD +(\$r[0-7]) +(\$0|\$r[0-7]) +(\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'SUBI': {regex: /^SUBI +(\$r[0-7]) +(\$0|\$r[0-7]) +(\d+)([ \t]*#.*)?$/, },
+        'SUB' : {regex: /^SUB +(\$r[0-7]) +(\$0|\$r[0-7]) +(\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'MULI': {regex: /^MULI +(\$r[0-7]) +(\$0|\$r[0-7]) +(\d+)([ \t]*#.*)?$/, },
+        'MUL' : {regex: /^MUL +(\$r[0-7]) +(\$0|\$r[0-7]) +(\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'CMP' : {regex: /^CMP +(\$0|\$r[0-7]) +(\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'MOV' : {regex: /^MOV +(\$r[0-7]) +(\$0|\$r[0-7])([ \t]*#.*)?$/, },
         'JMP' : {regex: /^JMP +(\d+)([ \t]*#.*)?$/, },
         'JE'  : {regex: /^JE +(\d+)([ \t]*#.*)?$/, },
         'JNE' : {regex: /^JNE +(\d+)([ \t]*#.*)?$/, },
@@ -40564,6 +40617,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
         'HLT' : {regex: /^HLT([ \t]*#.*)?$/, },
     };
     var stages = {};
+    var count_clocks = 0;
 
     // impede que o PC seja incrementado na fase de fetch
     var bubble = false;
@@ -40576,6 +40630,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
             operation:'NOP',
             details: null,
             alternative:0,
+            desviou: null,
         };
     };
 
@@ -40590,6 +40645,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
             operation:'NOP',
             details: null,
             alternative:0,
+            desviou: null,
         };
         var parsed = parse(stages['F'].instruction.verbose);
         stages['F'].instruction.details = parsed.details;
@@ -40603,7 +40659,6 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
             case 'JGT':
             case 'JLT':
                 //TODO branch prediction
-                console.log($rootScope.asm_config.prediction_type);
                 switch ($rootScope.asm_config.prediction_type){
                     case '0': // Nunca desvia
                         Registers.set('$pc', pc + 4);
@@ -40614,10 +40669,17 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
                         stages['F'].instruction.alternative = pc + 4;
                         break;
                     case '2': // N bits
-                        console.log("aaa");
+                        if(BPTable.branch(pc)){
+                            Registers.set('$pc', parseInt(parsed.details[1]));
+                            stages['F'].instruction.alternative = pc + 4;
+                            stages['F'].instruction.desviou = true;
+                        } else {
+                            Registers.set('$pc', pc + 4);
+                            stages['F'].instruction.alternative = parseInt(parsed.details[1]);
+                            stages['F'].instruction.desviou = false;
+                        }
                         break;
                     default:
-                        console.log("ddd");
                         break;
                 }
                 // Se a previsão falhar, trocar instrução seguinte por bolha.
@@ -40701,6 +40763,9 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
                         Registers.set('$pc', stages['E'].instruction.alternative);
                         stall('F');
                         stall('D');
+                        $rootScope.$broadcast('BPTable-errou');
+                    } else {
+                        $rootScope.$broadcast('BPTable-acertou');
                     }
                     break;
                 case '1': // Sempre desvia
@@ -40708,9 +40773,33 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
                         Registers.set('$pc', stages['E'].instruction.alternative);
                         stall('F');
                         stall('D');
+                        $rootScope.$broadcast('BPTable-errou');
+                    } else {
+                        $rootScope.$broadcast('BPTable-acertou');
                     }
                     break;
                 case '2': // N bits
+                    if(condition){
+                        BPTable.desviou(stages['E'].instruction.number);
+                        if(!stages['E'].instruction.desviou){
+                            Registers.set('$pc', stages['E'].instruction.alternative);
+                            stall('F');
+                            stall('D');
+                            $rootScope.$broadcast('BPTable-errou');
+                        } else {
+                            $rootScope.$broadcast('BPTable-acertou');
+                        }
+                    } else {
+                        BPTable.ndesviou(stages['E'].instruction.number);
+                        if(stages['E'].instruction.desviou){
+                            Registers.set('$pc', stages['E'].instruction.alternative);
+                            stall('F');
+                            stall('D');
+                            $rootScope.$broadcast('BPTable-errou');
+                        } else {
+                            $rootScope.$broadcast('BPTable-acertou');
+                        }
+                    }
                     break;
                 default:
                     break;
@@ -40730,6 +40819,9 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
                 break;
             case 'JLT':
                 branch(ULA.output() < 0);
+                break;
+            case 'HLT':
+                $rootScope.$broadcast('halt');
                 break;
             default:
                 ULA.execute();
@@ -40770,6 +40862,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
                     operation: 'NOP',
                     details: null,
                     alternative:0,
+                    desviou: null,
                 },
 
                 execute: none,
@@ -40780,6 +40873,8 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
         stages['D'].execute = decode;
         stages['E'].execute = execute;
         stages['W'].execute = writeback;
+
+        count_clocks = 0;
     };
     init();
     $rootScope.$on('reset', init);
@@ -40794,11 +40889,16 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
         stages['D'].execute();
         stages['F'].execute();
         Registers.endclock();
+
+        count_clocks += 1;
+
+        $rootScope.$broadcast('CPU-clock');
     };
 
     return {
         clock: clock,
         debug: stages,
+        count_clocks: () => { return count_clocks; },
     }
 }]);
 angular.module('arqcompApp').factory('Registers', ['$rootScope', function ($rootScope) {
@@ -40812,16 +40912,16 @@ angular.module('arqcompApp').factory('Registers', ['$rootScope', function ($root
             return null;
         }
     };
-    var _toset = {}
+    var _toset = {};
     var set = (reg, value) => {
         _toset[reg] = value;
-    }
+    };
     var endclock = () => {
         for(reg in _toset){
             _set(reg, _toset[reg]);
         }
         _toset = {};
-    }
+    };
 
     var get = reg => {
         return (reg in registers)? registers[reg] : null;
@@ -40838,7 +40938,7 @@ angular.module('arqcompApp').factory('Registers', ['$rootScope', function ($root
         "$r7": 0,
         "$cmp": 0,
         "$pc": 0,
-    }
+    };
     var reset = () => {
         for(key in registers){
             registers[key] = 0;
@@ -40846,7 +40946,7 @@ angular.module('arqcompApp').factory('Registers', ['$rootScope', function ($root
     };
 
     reset();
-    $rootScope.$on('reset', reset)
+    $rootScope.$on('reset', reset);
 
     return {
         registers: registers,
@@ -40884,9 +40984,9 @@ angular.module('arqcompApp').factory('ULA', [function () {
         },
     };
 
-    var set_func = func => {function_name = func; console.log({'function_name': func});};
-    var set_val1 = val => {val1 = val; console.log({'val1': val});};
-    var set_val2 = val => {val2 = val; console.log({'val2': val});};
+    var set_func = func => {function_name = func;};
+    var set_val1 = val => {val1 = val;};
+    var set_val2 = val => {val2 = val;};
 
     var execute = () => {
         output = functions[function_name](val1, val2)
@@ -40906,3 +41006,58 @@ angular.module('arqcompApp').factory('ULA', [function () {
         }},
     }
 }]);
+angular.module('arqcompApp').filter('syntax', ['$sce', $sce => {
+
+    var wrapper = (txt, regex, prefix, sufix) => {
+        return txt.replace(regex, prefix+'$1'+sufix);
+    };
+
+    var parse_comment = txt => {
+        var regex = /([ \t]*#.*)?$/;
+        var prefix = '<span class="syntax-comment">';
+        var sufix = '</span>';
+        return wrapper(txt, regex, prefix, sufix);
+    };
+
+    var parse_function = txt => {
+        var regex = /^(ADDI|ADD|SUBI|SUB|MULI|MUL|CMP|MOV|JMP|JE|JNE|JGT|JLT|NOP|HLT)/;
+        var prefix = '<span class="syntax-function">';
+        var sufix = '</span>';
+        return wrapper(txt, regex, prefix, sufix);
+    };
+
+    var parse_register = txt => {
+        var regex = /(\$r[0-7]|\$0|\$cmp|\$pc)/g;
+        var prefix = '<span class="syntax-register">';
+        var sufix = '</span>';
+        return wrapper(txt, regex, prefix, sufix);
+    };
+
+    var parse_number = txt => {
+        var regex = /(&nbsp;\d+)/g;
+        var prefix = '<span class="syntax-number">';
+        var sufix = '</span>';
+        return wrapper(txt, regex, prefix, sufix);
+    };
+
+    var parse_spaces = txt => {
+        return txt.replace(/ /g, '&nbsp;');
+    };
+
+    return function(line) {
+        return $sce.trustAsHtml(
+            parse_register(
+                parse_function(
+                    parse_comment(
+                        parse_number(
+                            parse_spaces(
+                                line
+                            )
+                        )
+                    )
+                )
+            )
+        );
+    };
+}]);
+
