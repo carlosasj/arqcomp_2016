@@ -7,9 +7,10 @@ angular.module("arqcompApp").controller('ConfigCtrl', ['$scope', '$rootScope', '
     } else {
         $scope.form = {
             selected_code: Instructions.predefinedCodes[0],
-            prediction_type: 0,
+            prediction_type: '0',
             number_of_bits: 1,
         };
+
     }
 
     $scope.error = '';

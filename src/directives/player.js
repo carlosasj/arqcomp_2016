@@ -10,6 +10,9 @@ angular.module('arqcompApp').directive('playerDirective', [function() {
 angular.module('arqcompApp').controller('PlayerDirectiveController', ['$scope', '$interval', '$timeout', 'CPU', function ($scope, $interval, $timeout, CPU) {
 	$scope.state = 'paused';
 	$scope.delay = 500;
+	$scope.$on('reset', () =>{
+		$scope.state = 'paused';
+	});
 
 	var loop = () => {
 		if ($scope.state == 'playing') {

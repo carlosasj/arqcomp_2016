@@ -1,19 +1,19 @@
 angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions', '$rootScope', function (ULA, Registers, Instructions, $rootScope) {
 
     var all_functions = {
-        'ADDI': {regex: /^ADDI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
-        'ADD' : {regex: /^ADD (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
-        'SUBI': {regex: /^SUBI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
-        'SUB' : {regex: /^SUB (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
-        'MULI': {regex: /^MULI (\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
-        'MUL' : {regex: /^MUL (\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
-        'CMP' : {regex: /^CMP (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
-        'MOV' : {regex: /^MOV (\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
-        'JMP' : {regex: /^JMP (\d+)([ \t]*#.*)?$/, },
-        'JE'  : {regex: /^JE (\d+)([ \t]*#.*)?$/, },
-        'JNE' : {regex: /^JNE (\d+)([ \t]*#.*)?$/, },
-        'JGT' : {regex: /^JGT (\d+)([ \t]*#.*)?$/, },
-        'JLT' : {regex: /^JLT (\d+)([ \t]*#.*)?$/, },
+        'ADDI': {regex: /^ADDI +(\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
+        'ADD' : {regex: /^ADD +(\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'SUBI': {regex: /^SUBI +(\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
+        'SUB' : {regex: /^SUB +(\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'MULI': {regex: /^MULI +(\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
+        'MUL' : {regex: /^MUL +(\$r[0-7]) (\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'CMP' : {regex: /^CMP +(\$0|\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'MOV' : {regex: /^MOV +(\$r[0-7]) (\$0|\$r[0-7])([ \t]*#.*)?$/, },
+        'JMP' : {regex: /^JMP +(\d+)([ \t]*#.*)?$/, },
+        'JE'  : {regex: /^JE +(\d+)([ \t]*#.*)?$/, },
+        'JNE' : {regex: /^JNE +(\d+)([ \t]*#.*)?$/, },
+        'JGT' : {regex: /^JGT +(\d+)([ \t]*#.*)?$/, },
+        'JLT' : {regex: /^JLT +(\d+)([ \t]*#.*)?$/, },
         'NOP' : {regex: /^NOP([ \t]*#.*)?$/, },
         'HLT' : {regex: /^HLT([ \t]*#.*)?$/, },
     };
@@ -29,6 +29,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
             write_register:'',
             operation:'NOP',
             details: null,
+            alternative:0,
         };
     }
 
@@ -42,6 +43,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
             write_register:'',
             operation:'NOP',
             details: null,
+            alternative:0,
         };
         var parsed = parse(stages['F'].instruction.verbose);
         stages['F'].instruction.details = parsed.details;
@@ -55,7 +57,23 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
             case 'JGT':
             case 'JLT':
                 //TODO branch prediction
-                Registers.set('$pc', pc + 4); // nunca desvia
+                console.log($rootScope.asm_config.prediction_type);
+                switch ($rootScope.asm_config.prediction_type){
+                    case '0': // Nunca desvia
+                        Registers.set('$pc', pc + 4);
+                        stages['F'].instruction.alternative = parseInt(parsed.details[1]);
+                        break;
+                    case '1': // Sempre desvia
+                        Registers.set('$pc', parseInt(parsed.details[1]));
+                        stages['F'].instruction.alternative = pc + 4;
+                        break;
+                    case '2': // N bits
+                        console.log("aaa");
+                        break;
+                    default:
+                        console.log("ddd");
+                        break;
+                }
                 // Se a previsão falhar, trocar instrução seguinte por bolha.
                 break;
             case 'HLT':
@@ -130,39 +148,42 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
     };
 
     var execute = () => {
+        var branch = condition => {
+            switch ($rootScope.asm_config.prediction_type){
+                case '0': // Nunca desvia
+                    if(condition){
+                        Registers.set('$pc', stages['E'].instruction.alternative);
+                        stall('F');
+                        stall('D');
+                    }
+                    break;
+                case '1': // Sempre desvia
+                    if(!condition){
+                        Registers.set('$pc', stages['E'].instruction.alternative);
+                        stall('F');
+                        stall('D');
+                    }
+                    break;
+                case '2': // N bits
+                    break;
+                default:
+                    break;
+            }
+
+        };
         var details = stages['E'].instruction.details;
         switch(stages['E'].instruction.operation){
             case 'JE':
-                console.log(details[1]);
-                if(ULA.output() == 0){
-                    Registers.set('$pc', parseInt(details[1]));
-                    stall('F');
-                    stall('D');
-                }
+                branch(ULA.output() == 0);
                 break;
             case 'JNE':
-                bubble = true;
-                if(ULA.output() != 0){
-                    Registers.set('$pc', parseInt(details[1]));
-                    stall('F');
-                    stall('D');
-                }
+                branch(ULA.output() != 0);
                 break;
             case 'JGT':
-                bubble = true;
-                if(ULA.output() > 0){
-                    Registers.set('$pc', parseInt(details[1]));
-                    stall('F');
-                    stall('D');
-                }
+                branch(ULA.output() > 0);
                 break;
             case 'JLT':
-                bubble = true;
-                if(ULA.output() < 0){
-                    Registers.set('$pc', parseInt(details[1]));
-                    stall('F');
-                    stall('D');
-                }
+                branch(ULA.output() < 0);
                 break;
             default:
                 ULA.execute();
@@ -202,6 +223,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
                     write_register: '',
                     operation: 'NOP',
                     details: null,
+                    alternative:0,
                 },
 
                 execute: none,
