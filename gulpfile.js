@@ -19,21 +19,21 @@ gulp.task('sass', function () {
     return gulp.src('./src/sass/app.scss')
         .pipe(sass({outputStyle: 'compressed'}).on('error', sass.logError))
         .pipe(strip.text())
-        .pipe(gulp.dest('./public'))
+        .pipe(gulp.dest('./public/arqcomp_2016'))
         .pipe(connect.reload());
 });
 
 gulp.task('copy:img', function() {
     return gulp.src('./src/img/**/*', {base: "./src/img/"})
         .pipe(copy())
-        .pipe(gulp.dest('./public/img/'))
+        .pipe(gulp.dest('./public/arqcomp_2016/img/'))
         .pipe(connect.reload());
 });
 
 gulp.task('copy:fonts', function() {
     return gulp.src('bower_components/materialize/fonts/**/*')
         .pipe(copy())
-        .pipe(gulp.dest('./public/fonts'));
+        .pipe(gulp.dest('./public/arqcomp_2016/fonts'));
 });
 
 gulp.task('copy:html', function() {
@@ -46,7 +46,7 @@ gulp.task('copy:html', function() {
             sortClassName: true
         }))
         .pipe(copy())
-        .pipe(gulp.dest('./public/'))
+        .pipe(gulp.dest('./public/arqcomp_2016/'))
         .pipe(connect.reload());
 });
 
@@ -61,7 +61,7 @@ gulp.task('js', function() {
         './src/**/*.js'
     ])
         .pipe(concat('app.js'))
-        .pipe(gulp.dest('public/'))
+        .pipe(gulp.dest('public/arqcomp_2016/'))
         .pipe(connect.reload());
 });
 
@@ -71,7 +71,7 @@ gulp.task('connect', function() {
         port: 3000,
         host: '0.0.0.0',
         livereload: true,
-        fallback: 'public/index.html'
+        fallback: 'public/arqcomp_2016/index.html'
     });
 });
 
