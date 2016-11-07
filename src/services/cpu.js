@@ -1,4 +1,4 @@
-angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions', '$rootScope', function (ULA, Registers, Instructions, $rootScope) {
+angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions', '$rootScope', 'BPTable', function (ULA, Registers, Instructions, $rootScope, BPTable) {
 
     var all_functions = {
         'ADDI': {regex: /^ADDI +(\$r[0-7]) (\$0|\$r[0-7]) (\d+)([ \t]*#.*)?$/, },
@@ -30,6 +30,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
             operation:'NOP',
             details: null,
             alternative:0,
+            desviou: null,
         };
     };
 
@@ -44,6 +45,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
             operation:'NOP',
             details: null,
             alternative:0,
+            desviou: null,
         };
         var parsed = parse(stages['F'].instruction.verbose);
         stages['F'].instruction.details = parsed.details;
@@ -57,7 +59,6 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
             case 'JGT':
             case 'JLT':
                 //TODO branch prediction
-                console.log($rootScope.asm_config.prediction_type);
                 switch ($rootScope.asm_config.prediction_type){
                     case '0': // Nunca desvia
                         Registers.set('$pc', pc + 4);
@@ -68,10 +69,17 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
                         stages['F'].instruction.alternative = pc + 4;
                         break;
                     case '2': // N bits
-                        console.log("aaa");
+                        if(BPTable.branch(pc)){
+                            Registers.set('$pc', parseInt(parsed.details[1]));
+                            stages['F'].instruction.alternative = pc + 4;
+                            stages['F'].instruction.desviou = true;
+                        } else {
+                            Registers.set('$pc', pc + 4);
+                            stages['F'].instruction.alternative = parseInt(parsed.details[1]);
+                            stages['F'].instruction.desviou = false;
+                        }
                         break;
                     default:
-                        console.log("ddd");
                         break;
                 }
                 // Se a previsão falhar, trocar instrução seguinte por bolha.
@@ -165,6 +173,21 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
                     }
                     break;
                 case '2': // N bits
+                    if(condition){
+                        BPTable.desviou();
+                        if(!stages['E'].instruction.desviou){
+                            Registers.set('$pc', stages['E'].instruction.alternative);
+                            stall('F');
+                            stall('D');
+                        }
+                    } else {
+                        BPTable.ndesviou();
+                        if(stages['E'].instruction.desviou){
+                            Registers.set('$pc', stages['E'].instruction.alternative);
+                            stall('F');
+                            stall('D');
+                        }
+                    }
                     break;
                 default:
                     break;
@@ -224,6 +247,7 @@ angular.module('arqcompApp').factory('CPU', ['ULA', 'Registers', 'Instructions',
                     operation: 'NOP',
                     details: null,
                     alternative:0,
+                    desviou: null,
                 },
 
                 execute: none,
